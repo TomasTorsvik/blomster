@@ -1,0 +1,121 @@
+# -----------------------------------------
+#   Configuration for the tool
+# -----------------------------------------
+hamocc:
+  version: 0.1
+  source_root: /nird/datalake/NS16000B/blomster
+
+# -----------------------------------------
+#   Configuration for the simulation
+# -----------------------------------------
+experiment:
+  caseid      : n1850GHGGaxg.LM.nor30b27.002.20261016
+  input_root  : /nird/datalake/NS9560K/noresm3/cases
+  work_root   : /scratch/yanchun/diagnostics/hamocc
+  www_root    : /nird/datalake/NS9560K/www/diagnostics/hamocc/yanchun
+  year_start  : 1
+  year_end    : 50
+  grid        : tnx1v4
+
+# -----------------------------------------
+#   Required history variables (by file tag)
+# -----------------------------------------
+variables:
+  hbgcy:
+    - depth_bnds
+    - pddpo
+    - o2
+    - si
+    - po4
+    - no3
+    - dissic
+    - talk
+    - o2lvl
+    - p_o2lvl
+    - silvl
+    - po4lvl
+    - no3lvl
+    - dissiclvl
+    - talklvl
+    - delta13clvl
+    - pp_tot
+    - ppint
+    - epc100
+    - epcalc100
+    - pco2
+    - co2fxd
+    - co2fxu
+    - dmsflux
+  hbgcm:
+    - pp
+    - ppint
+    - pddpo
+    - pco2
+    - co2fxd
+    - co2fxu
+    - srfpo4
+    - srfo2
+    - srfno3
+    - srfsi
+  hm:                               # BLOM monthly physics, for the regional cycles
+    - sst
+    - sss
+    - mldb04
+
+# -----------------------------------------
+#   Jupyter notebooks for diagnostics
+# -----------------------------------------
+diagnostics:
+  root: index.ipynb
+  chapters:
+    - file: timeseries/timeseries.ipynb
+    - file: maps/maps.ipynb
+    - file: zonal_mean/zonal_mean.ipynb
+    - file: regional/regional.ipynb
+
+# -----------------------------------------
+#   Model grid files (HAMOCC runs on the BLOM grid)
+# -----------------------------------------
+grids:
+  tnx1v4:
+    grid_file: /nird/datalake/NS16000B/blomster/grids/tnx1v4/grid.nc
+
+# -----------------------------------------
+#   Observational datasets (legacy preprocessed obs_data/, 1x1 degree)
+#   file: relative to obs_root; var: variable name; scale: factor to display units.
+#   File/variable names are taken from the legacy HAMOCC_DIAG scripts; the
+#   scale factors and units are NOT yet verified (check against the files).
+# -----------------------------------------
+datasets:
+  obs_root: /nird/datalake/NS16000B/blomster/datasets/hamocc
+  units_verified: false
+  maps:                             # keyed by model variable; also used by the zonal means
+    o2lvl:       {file: woa13_all_o00_01.nc, var: o_an, scale: 1.0}
+    aoulvl:      {file: woa13_all_A00_01.nc, var: A_an, scale: 1.0}
+    silvl:       {file: woa13_all_i00_01.nc, var: i_an, scale: 1.0}
+    po4lvl:      {file: woa13_all_p00_01.nc, var: p_an, scale: 1.0}
+    no3lvl:      {file: woa13_all_n00_01.nc, var: n_an, scale: 1.0}
+    dissiclvl:   {file: GLODAPv2.2016b.TCO2_reordered.nc, var: TCO2, scale: 1.0}
+    talklvl:     {file: GLODAPv2.2016b.TAlk_reordered.nc, var: TAlk, scale: 1.0}
+    delta13clvl: {file: EideM-etal_2017/C13_Climatology.nc, var: c13_pi, scale: 1.0}
+    pco2:        {file: spco2_ETH_ANN_1982-2011.nc, var: spco2, scale: 1.0}
+    co2fxn:      {file: spco2_ETH_ANN_1982-2011.nc, var: fgco2, scale: 1.0}
+    pp_tot:      {file: OcnProd_MODIS/ave.m.clim_annual_2003-2012.nc, var: pp, scale: 1.0}
+    ppint:       {file: OcnProd_MODIS/ave.m.clim_annual_2003-2012.nc, var: pp, scale: 1.0}
+  zonal:
+    # Legacy basin masks on the 1x1 grid (grid_files/1x1d/generic/); variable name not yet verified.
+    basin_mask_root: /nird/datalake/NS16000B/blomster/grids/1x1d/generic
+    basin_mask_file: region_mask_1x1_{basin}.nc
+    basin_mask_var: mask
+  regional:                         # monthly cycles; {region} is ARC, NATL, NPAC, TATL, TPAC, IND, MSO or HSO
+    pco2:    {file: "spco2_ETH_MON_1982-2011_{region}.nc", var: spco2, scale: 1.0}
+    co2fxn:  {file: "spco2_ETH_MON_1982-2011_{region}.nc", var: fgco2, scale: 1.0}
+    pp_tot:  {file: "OcnProd_MODIS/ave.m.clim_MON_2003-2012_{region}.nc", var: pp, scale: 1.0}
+    ppint:   {file: "OcnProd_MODIS/ave.m.clim_MON_2003-2012_{region}.nc", var: pp, scale: 1.0}
+    srfo2:   {file: "woa13_all_oMON_01_{region}.nc", var: o_an, scale: 1.0}
+    srfsi:   {file: "woa13_all_iMON_01_{region}.nc", var: i_an, scale: 1.0}
+    srfpo4:  {file: "woa13_all_pMON_01_{region}.nc", var: p_an, scale: 1.0}
+    srfno3:  {file: "woa13_all_nMON_01_{region}.nc", var: n_an, scale: 1.0}
+    sst:     {file: "woa13_decav_tMON_01_{region}.nc", var: t_an, scale: 1.0}
+    sss:     {file: "woa13_decav_sMON_01_{region}.nc", var: s_an, scale: 1.0}
+    mld:     {file: "MLD/mld_clim_WOCE_1x1_{region}.nc", var: mld, scale: 1.0}
