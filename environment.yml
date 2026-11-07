@@ -6,6 +6,7 @@ dependencies:
   - cartopy=0.25.0
   - cftime=1.6.5
   - cmocean=4.0.3
+  - dask
   - jq=1.8.2
   - jupyter-book=1.0.4.post1
   - jupyterlab=4.6.4
