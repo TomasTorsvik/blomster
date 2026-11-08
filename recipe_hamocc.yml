@@ -17,6 +17,14 @@ experiment:
   year_end    : 50
   grid        : tnx1v4
 
+# Optional control case (legacy CNTL=USER). When present, maps, zonal means and regional cycles show
+# test | control | test - control in place of the observations. Absent by default.
+# experiment_cntl:
+#   caseid      : <control caseid>
+#   input_root  : /nird/datalake/NS9560K/noresm3/cases   # optional, default experiment.input_root
+#   year_start  : 1
+#   year_end    : 50
+
 # -----------------------------------------
 #   Required history variables (by file tag)
 # -----------------------------------------

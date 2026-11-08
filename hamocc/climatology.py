@@ -53,10 +53,10 @@ def annual_mean_map(ds, name, depth=None):
     return out
 
 
-def difference(model, obs):
-    """Model minus obs on the same grid, keeping the units."""
+def difference(model, obs, label="model - obs"):
+    """Model minus obs (or test minus control) on the same grid, keeping the units."""
     diff = (model - obs).rename(model.name)
-    diff.attrs.update(long_name=f"{model.attrs.get('long_name', model.name)}, model - obs",
+    diff.attrs.update(long_name=f"{model.attrs.get('long_name', model.name)}, {label}",
                       units=model.attrs.get("units", ""))
     return diff
 
