@@ -159,6 +159,21 @@ plot functions as T2, so do T2 first). T4 builds on T3's plot code only for the 
   the `experiment.grid` name; verify `blomster.grid.load` works for gx1v6 as well as the tnx grids.
 * Done when: `grid.load` runs on each grid file and the unit tests cover at least one non-tnx grid.
 
+### Status (T7)
+* Done 2026-11-08. `blomster.grid.load` and `timeseries.load_parea` already work unchanged on all 20 legacy grid files
+  (gx3v7, gx1v5, gx1v6 and the duplicate g1xv6, 14 tnx files incl. lgm/lgm2/mis3/PlioMIP2 and both tnx0.5v1 files,
+  tnx0.083v1): shapes match the legacy size table and total area is about 5.05e14 m2. New `hamocc/grids.py`:
+  `KNOWN_GRIDS` (18 names with p-grid shape), `grid_file(cfg)` (explicit `grids.<name>.grid_file`, else
+  `<grids.root>/<name>/grid.nc`, legacy layout), `candidates(shape)` (grid versions of one size share a shape; legacy
+  told them apart by missing-value counts, not ported). Recipe `grids:` now has `root` instead of one hard-coded
+  `tnx1v4` entry (an override stays possible); the four notebooks call `grids.grid_file(cfg)`.
+* Files: `hamocc/grids.py` (new), `recipe_hamocc.yml`, the four notebooks, `tests/test_hamocc_grids.py` (new).
+* Tests: `blomster-env`, 97 passed: synthetic tnx and gx3v7-shaped grid files, lookup/override/errors, shape candidates,
+  and a read-only parametrised check of every legacy grid file (about 7 s, mostly tnx0.083v1; skipped when the legacy
+  data is absent).
+* Not verified: model output on a non-tnx grid (history shapes vs grid, regridding with `xesmf`); automatic grid
+  detection from the history files is not implemented, `experiment.grid` must be set.
+
 ## T8. Fixed contour levels and output options (optional)
 * Legacy uses fixed contour levels per variable (`cntrs_*`, `dcntrs_*` in `plot_latlon*.ncl`, `plot_zonal_mean.ncl`),
   so runs can be compared side by side; blomster uses per-field quantile levels.

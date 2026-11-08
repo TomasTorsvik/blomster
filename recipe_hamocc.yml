@@ -81,9 +81,12 @@ diagnostics:
 # -----------------------------------------
 #   Model grid files (HAMOCC runs on the BLOM grid)
 # -----------------------------------------
+# `experiment.grid` names the grid. Its file is `<root>/<grid>/grid.nc` (legacy HAMOCC_DIAG grid_files/ layout,
+# all 18 grids of hamocc.grids.KNOWN_GRIDS) unless a grid has its own `grid_file` entry below.
 grids:
-  tnx1v4:
-    grid_file: /nird/datalake/NS16000B/blomster/grids/tnx1v4/grid.nc
+  root: /nird/datalake/NS16000B/blomster/grids
+  # tnx1v4:
+  #   grid_file: /path/to/other/grid.nc
 
 # -----------------------------------------
 #   Observational datasets (legacy preprocessed obs_data/, 1x1 degree)
