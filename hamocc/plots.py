@@ -63,6 +63,15 @@ def _cmap(cmap, fallback):
     return get_cmap(cmap) if isinstance(cmap, str) else cmap
 
 
+def _with_units(data, units):
+    """`data` with a `units` attribute (plot_map2d needs one; arithmetic and regridding drop it)."""
+    if "units" in data.attrs:
+        return data
+    out = data.copy()
+    out.attrs["units"] = units
+    return out
+
+
 def map_panels(lon, lat, model, obs=None, proj="PlateCarree", title=None, area=None, control=None,
                levels=None, diff_levels=None, cmap=None, diff_cmap=None):
     """Model | obs | model - obs maps (model only when there is no reference). Returns the figure.
@@ -95,14 +104,15 @@ def map_panels(lon, lat, model, obs=None, proj="PlateCarree", title=None, area=N
     fig, axes = plt.subplots(1, n, figsize=(
         6.5 * n, 4.2), subplot_kw={"projection": projection})
     axes = np.atleast_1d(axes)
+    units = model.attrs.get("units", "")  # plot_map2d labels the colorbar with `.units`
     for ax, (label, data) in zip(axes, panels):
-        plot_map2d(lon, lat, data, norm=norm, cmap=cmap, ax=ax)
+        plot_map2d(lon, lat, _with_units(data, units), norm=norm, cmap=cmap, ax=ax)
         ax.set_title(label)
     if obs is not None:
         diff = climatology.difference(model, obs, label=diff_label.lower())
         dlev = _levels(diff_levels, _diff_levels(diff))
         dnorm = mpl.colors.BoundaryNorm(dlev, diff_cmap.N, extend="both")
-        plot_map2d(lon, lat, diff, norm=dnorm, cmap=diff_cmap, ax=axes[-1])
+        plot_map2d(lon, lat, _with_units(diff, units), norm=dnorm, cmap=diff_cmap, ax=axes[-1])
         if area is None:
             axes[-1].set_title(diff_label)
         else:

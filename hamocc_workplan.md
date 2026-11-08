@@ -202,3 +202,15 @@ plot functions as T2, so do T2 first). T4 builds on T3's plot code only for the 
 * After each task: update `CLAUDE.md` (status and caveats) and the "not yet verified" notes in the notebooks.
 * Still unverified for all of the above: `xesmf` regridding and model-vs-obs maps on real output; run the
   notebooks on the test case in `noresm-test-data` once the grid file path is in place.
+
+### Status (notebook run on the real test case, 2026-11-08)
+* All four notebooks (`timeseries`, `maps`, `zonal_mean`, `regional`) were executed end to end with `jupyter nbconvert --execute`
+  on `NOIIAJRARYF8485OC.TL319_tn14.3.0a03a.20250506` (1750-1751), the legacy obs and `tnx1v4/grid.nc`, in a scratch copy with a
+  local recipe. Two bugs found and fixed:
+  * `maps`: `blomster.plots.plot_map2d` reads `var.units`, but the panels had none after arithmetic/regridding;
+    `plots.map_panels` now sets `units` from the model field (`_with_units`).
+  * `zonal_mean`, `regional`: ESMF bilinear regridding failed (rc 506) because the top row of the tripolar grid repeats
+    points of the row below (the fold). `zonal.make_regridder` now drops such rows (`_n_fold_rows`) and returns a wrapper
+    that accepts full-grid fields; `unmapped_to_nan=True`.
+* Tests: 106 passed (two new regression tests). Executed notebooks were not inspected by eye; model units, the flux sign and a
+  full `jupyter-book` build are still unverified.

@@ -64,3 +64,19 @@ def test_on_target_grid_interpolates_depth():
         1.0), depth=xr.DataArray([5.0, 15.0], dims="depth"))
     assert float(out.isel(lat=90, lon=100)[0]) == pytest.approx(0.5)
     assert float(out.isel(lat=90, lon=100)[1]) == pytest.approx(1.5)
+
+
+def test_fold_rows_detected_and_regridder_takes_full_field():
+    import numpy as np
+    import xarray as xr
+
+    from hamocc import zonal
+
+    lon1, lat1 = np.meshgrid(np.arange(0.5, 360, 5.0) - 180, np.arange(-60, 85, 5.0))
+    lat = np.vstack([lat1, lat1[-1:]])  # last row repeats the one below, like a tripolar fold
+    lon = np.vstack([lon1, lon1[-1:]])
+    assert zonal._n_fold_rows(lat, lon) == 1
+    assert zonal._n_fold_rows(lat1, lon1) == 0
+    regridder = zonal.make_regridder(lat, lon, res=5.0)
+    out = regridder(xr.DataArray(np.ones(lat.shape), dims=("y", "x")), skipna=True, na_thres=1.0)
+    assert out.shape[-2:] == (36, 72)

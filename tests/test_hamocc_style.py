@@ -85,3 +85,17 @@ def test_zonal_panels_use_fixed_levels():
                       attrs={"long_name": "z", "units": "u"})
     fig = plots.zonal_panels(zm, zm * 1.1, levels=[0, 1, 2, 3], diff_levels=[-1, 0, 1], cmap="plasma")
     assert len(fig.axes) >= 3
+
+
+def test_map_panels_without_units_attribute():
+    import matplotlib
+    matplotlib.use("Agg")
+    import numpy as np
+    import xarray as xr
+
+    from hamocc import plots
+
+    lon, lat = np.meshgrid(np.arange(0, 360, 30.0), np.arange(-60, 61, 30.0))
+    model = xr.DataArray(np.random.rand(*lat.shape), dims=("y", "x"), name="v")  # no attrs
+    obs = xr.DataArray(np.random.rand(*lat.shape), dims=("y", "x"))
+    assert plots.map_panels(lon, lat, model, obs=obs) is not None

@@ -19,13 +19,52 @@ def target_grid(res=1.0):
     return xr.Dataset({"lat": ("lat", lat), "lon": ("lon", lon)})
 
 
+def _n_fold_rows(model_lat, model_lon):
+    """Number of trailing rows of a tripolar grid that only repeat points of the rows below (the fold).
+
+    ESMF cannot build a bilinear regridder from a grid with such duplicated points.
+    """
+    lat, lon = np.asarray(model_lat), np.asarray(model_lon)
+    n = 0
+    while lat.shape[0] - n > 1:
+        row = lat.shape[0] - n - 1
+        below = set(zip(lat[:row].round(6).ravel(), lon[:row].round(6).ravel()))
+        if all(pt in below for pt in zip(lat[row].round(6), lon[row].round(6))):
+            n += 1
+        else:
+            break
+    return n
+
+
+class _TrimmedRegridder:
+    """Regridder that ignores the duplicated fold rows of the model grid, so it takes full model fields."""
+
+    def __init__(self, regridder, ny, y_dim="y"):
+        self._regridder, self._ny, self._y_dim = regridder, ny, y_dim
+
+    def __getattr__(self, name):
+        return getattr(self._regridder, name)
+
+    def __call__(self, da, **kwargs):
+        if self._y_dim in da.dims and da.sizes[self._y_dim] > self._ny:
+            da = da.isel({self._y_dim: slice(0, self._ny)})
+        return self._regridder(da, **kwargs)
+
+
 def make_regridder(model_lat, model_lon, res=1.0, method="bilinear"):
-    """xesmf regridder from the model's 2-D cell centres to the regular grid."""
+    """xesmf regridder from the model's 2-D cell centres to the regular grid.
+
+    Duplicated fold rows at the top of a tripolar grid are left out; the returned regridder accepts
+    fields on the full model grid and drops them itself.
+    """
     import xesmf as xe
 
-    source = xr.Dataset({"lat": (("y", "x"), model_lat),
-                        "lon": (("y", "x"), model_lon)})
-    return xe.Regridder(source, target_grid(res), method=method, periodic=True)
+    ny = np.asarray(model_lat).shape[0] - _n_fold_rows(model_lat, model_lon)
+    source = xr.Dataset({"lat": (("y", "x"), np.asarray(model_lat)[:ny]),
+                        "lon": (("y", "x"), np.asarray(model_lon)[:ny])})
+    regridder = xe.Regridder(source, target_grid(res), method=method, periodic=True,
+                             unmapped_to_nan=True)
+    return _TrimmedRegridder(regridder, ny)
 
 
 def normalize_lon(da, lon_name="lon"):
