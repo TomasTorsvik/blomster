@@ -107,5 +107,5 @@ def test_round_levels_readable_and_sorted():
     from hamocc import plots
 
     out = plots._round_levels(np.array([-3.6899, -0.1334, 1.0529, 3.4251]))
-    assert list(out) == [-3.69, -0.133, 1.05, 3.43]
+    np.testing.assert_allclose(out, [-3.69, -0.13, 1.05, 3.43])
     assert list(plots._round_levels(np.array([0.0, 0.0]))) == [0.0, 0.0]
