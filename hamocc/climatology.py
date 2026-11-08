@@ -39,7 +39,8 @@ def select_depth(da, depth):
     """Pick the z-level closest to `depth` (m); fail if none is within DEPTH_TOLERANCE_M."""
     level = da.sel(depth=depth, method="nearest")
     if abs(float(level["depth"]) - depth) > DEPTH_TOLERANCE_M:
-        raise ValueError(f"No level near {depth} m (nearest is {float(level['depth'])} m)")
+        raise ValueError(f"No level near {
+                         depth} m (nearest is {float(level['depth'])} m)")
     return level
 
 
@@ -77,7 +78,8 @@ def stats(model, obs, area=None):
     and `n` (number of common cells); the values are NaN if there is no common cell.
     """
     model, obs = xr.align(model, obs, join="exact")
-    weight = xr.ones_like(model, dtype=float) if area is None else xr.broadcast(area, model)[0]
+    weight = xr.ones_like(
+        model, dtype=float) if area is None else xr.broadcast(area, model)[0]
     valid = model.notnull() & obs.notnull() & weight.notnull()
     w = weight.where(valid, 0.0)
     wsum = float(w.sum())

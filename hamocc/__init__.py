@@ -3,4 +3,5 @@
 
 from . import climatology, io, obs, plots, regions, timeseries, variables, zonal
 
-__all__ = ["climatology", "io", "obs", "plots", "regions", "timeseries", "variables", "zonal"]
+__all__ = ["climatology", "io", "obs", "plots",
+           "regions", "timeseries", "variables", "zonal"]

@@ -117,4 +117,5 @@ REGION_BASINS = {
 }
 
 # Legacy region masks remove the Gulf (25-40N, 40-65E) from the Indian Ocean region
-REGION_EXCLUSIONS = {"IND": (25.0, 40.0, 40.0, 65.0)}  # lat_min, lat_max, lon_min, lon_max
+# lat_min, lat_max, lon_min, lon_max
+REGION_EXCLUSIONS = {"IND": (25.0, 40.0, 40.0, 65.0)}

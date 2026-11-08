@@ -50,7 +50,8 @@ def history_files(input_root, caseid, tag, year_start, year_end, component="blom
         pattern = f"{caseid}.{component}.{tag}.{year:04d}*.nc"
         files.extend(sorted(hist.glob(pattern)))
     if not files:
-        raise FileNotFoundError(f"No {tag} files for {caseid} in {hist}, years {year_start}-{year_end}")
+        raise FileNotFoundError(f"No {tag} files for {caseid} in {
+                                hist}, years {year_start}-{year_end}")
     return files
 
 

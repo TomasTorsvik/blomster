@@ -23,7 +23,8 @@ def make_regridder(model_lat, model_lon, res=1.0, method="bilinear"):
     """xesmf regridder from the model's 2-D cell centres to the regular grid."""
     import xesmf as xe
 
-    source = xr.Dataset({"lat": (("y", "x"), model_lat), "lon": (("y", "x"), model_lon)})
+    source = xr.Dataset({"lat": (("y", "x"), model_lat),
+                        "lon": (("y", "x"), model_lon)})
     return xe.Regridder(source, target_grid(res), method=method, periodic=True)
 
 
@@ -42,7 +43,8 @@ def load_basin_mask(path, var):
 def on_target_grid(da, grid, depth=None):
     """Interpolate an observed field to the target lat/lon (and optionally model depths)."""
     da = normalize_lon(da)
-    out = da.interp(lat=grid["lat"], lon=grid["lon"], kwargs={"fill_value": np.nan})
+    out = da.interp(lat=grid["lat"], lon=grid["lon"],
+                    kwargs={"fill_value": np.nan})
     if depth is not None and "depth" in out.dims:
         out = out.interp(depth=depth, kwargs={"fill_value": np.nan})
     return out

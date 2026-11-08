@@ -94,7 +94,8 @@ def flux_series(ds, name, parea, offset=0):
         field = ds[name]
         var = v.FLUX_TS_VARS[name]
         long_name = var.long_name
-    total = (field * parea).sum([d for d in field.dims if d != "time"]) * var.scale
+    total = (
+        field * parea).sum([d for d in field.dims if d != "time"]) * var.scale
     total = total.rename(name)
     total.attrs.update(long_name=long_name, units=var.units)
     return annual_index(total, offset)

@@ -20,13 +20,15 @@ def region_mask(basin_masks, region, grid):
 
     _, lat_min, lat_max = v.REGIONS[region]
     basin = basin_masks[v.REGION_BASINS[region]]
-    in_basin = basin.reindex(lat=grid["lat"], lon=grid["lon"], method="nearest") > 0
+    in_basin = basin.reindex(
+        lat=grid["lat"], lon=grid["lon"], method="nearest") > 0
     lat = grid["lat"]
     lon = grid["lon"]
     mask = in_basin & (lat >= lat_min) & (lat < lat_max)
     if region in v.REGION_EXCLUSIONS:
         la0, la1, lo0, lo1 = v.REGION_EXCLUSIONS[region]
-        mask = mask & ~((lat >= la0) & (lat <= la1) & (lon >= lo0) & (lon <= lo1))
+        mask = mask & ~((lat >= la0) & (lat <= la1) &
+                        (lon >= lo0) & (lon <= lo1))
     return mask
 
 
@@ -45,7 +47,8 @@ def load_variable_mask(path, var="mask"):
         mask = mask.isel(depth=0, drop=True)
     if "time" in mask.dims:
         if mask.sizes["time"] != 12:
-            raise ValueError(f"{path}: expected 12 monthly mask steps, got {mask.sizes['time']}")
+            raise ValueError(f"{path}: expected 12 monthly mask steps, got {
+                             mask.sizes['time']}")
         mask = mask.rename(time="month").assign_coords(month=np.arange(1, 13))
     mask = (mask.fillna(0) > 0).reset_coords(drop=True)
     return normalize_lon(mask)
@@ -53,7 +56,8 @@ def load_variable_mask(path, var="mask"):
 
 def combine_masks(region, variable):
     """Cells that are in both `region` (lat, lon) and `variable` (optionally with `month`)."""
-    variable = variable.reindex(lat=region["lat"], lon=region["lon"], method="nearest")
+    variable = variable.reindex(
+        lat=region["lat"], lon=region["lon"], method="nearest")
     return region & variable
 
 
@@ -92,7 +96,8 @@ def to_month_index(da):
     """Label a 12-step obs cycle by month 1-12 (the file's time/month axis is positional)."""
     dim = next((d for d in ("month", "time") if d in da.dims), None)
     if dim is None or da.sizes[dim] != 12:
-        raise ValueError(f"Expected a 12-step monthly axis, got dims {dict(da.sizes)}")
+        raise ValueError(
+            f"Expected a 12-step monthly axis, got dims {dict(da.sizes)}")
     return da.rename({dim: "month"}).assign_coords(month=np.arange(1, 13))
 
 
@@ -105,10 +110,12 @@ def obs_cycle(da, mask=None):
     da = to_month_index(da.squeeze(drop=True))
     if "lat" in da.dims or "lon" in da.dims:
         if mask is None:
-            raise ValueError("Obs field has lat/lon: a region mask is required")
+            raise ValueError(
+                "Obs field has lat/lon: a region mask is required")
         from .zonal import normalize_lon
 
-        da = weighted_mean(normalize_lon(da).reindex(lat=mask["lat"], lon=mask["lon"], method="nearest"), mask)
+        da = weighted_mean(normalize_lon(da).reindex(
+            lat=mask["lat"], lon=mask["lon"], method="nearest"), mask)
     return da
 
 

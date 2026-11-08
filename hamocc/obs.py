@@ -28,7 +28,8 @@ def regrid_to_model(da, lat, lon, method="bilinear"):
     import xesmf as xe
 
     target = xr.Dataset({"lat": (("y", "x"), lat), "lon": (("y", "x"), lon)})
-    source = da.rename({d: "lat" if d.startswith("lat") else "lon" for d in da.dims if d.startswith(("lat", "lon"))})
+    source = da.rename({d: "lat" if d.startswith(
+        "lat") else "lon" for d in da.dims if d.startswith(("lat", "lon"))})
     regridder = xe.Regridder(source, target, method=method, periodic=True)
     out = regridder(source, skipna=True, na_thres=1.0)
     out.attrs.update(da.attrs)
