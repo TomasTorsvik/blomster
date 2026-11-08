@@ -68,3 +68,18 @@ def test_monthly_cycle_ppint_and_months():
     assert out.sizes["month"] == 12
     assert float(out[0, 0, 0]) == pytest.approx(2.0 * 86400 * 365)
     assert clim.history_names("ppint", monthly=True) == ["ppint"]
+
+
+def test_load_obs_region_selects_surface(tmp_path):
+    import xarray as xr
+    from hamocc import obs
+
+    da = xr.DataArray(np.arange(24.0).reshape(12, 2, 1, 1) + np.array([0, 100.0]).reshape(1, 2, 1, 1),
+                      dims=("time", "depth", "lat", "lon"),
+                      coords={"depth": [0.0, 50.0]})
+    da.to_dataset(name="o_an").to_netcdf(tmp_path / "o_NATL.nc")
+    out = obs.load_obs_region({"file": "o_{region}.nc", "var": "o_an", "scale": 2.0}, tmp_path, "NATL")
+    assert "depth" not in out.dims
+    assert out.sizes["time"] == 12
+    assert float(out.isel(time=0).squeeze()) == 0.0
+    assert float(out.isel(time=1).squeeze()) == 4.0

@@ -35,15 +35,19 @@ def regrid_to_model(da, lat, lon, method="bilinear"):
     return out
 
 
-def load_obs_region(spec, obs_root, region):
+def load_obs_region(spec, obs_root, region, depth=0.0):
     """Open the regional observed field `spec['file']` formatted with the region name.
 
     Returns the field in display units without averaging over time (the 12
     months are kept). Files may hold a lat/lon field or an already averaged cycle.
+    Fields with a depth axis (e.g. WOA13 surface nutrients) are reduced to the
+    level nearest `depth` (default 0 m, the surface).
     """
     path = Path(obs_root) / spec["file"].format(region=region)
     with xr.open_dataset(path, decode_times=False) as ds:
         da = ds[spec["var"]].load()
+    if "depth" in da.dims:
+        da = da.sel(depth=depth, method="nearest")
     da = da * spec.get("scale", 1.0)
     da.attrs["source"] = str(path.name)
     return da

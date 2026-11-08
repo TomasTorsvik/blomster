@@ -72,47 +72,43 @@ grids:
 # -----------------------------------------
 #   Observational datasets (legacy preprocessed obs_data/, 1x1 degree)
 #   file: relative to obs_root; var: variable name; scale: factor to display units.
-#   WOA18 annual o2/si/po4/no3 (o_an, i_an, n_an, p_an) were checked against the
-#   files: variable names match, units are umol/kg, hence scale 1.025 (kg m-3 / 1000)
-#   to the model's mmol m-3. All other entries come from the legacy HAMOCC_DIAG scripts
-#   and are NOT verified (file names, variables, units); several are known to be absent
-#   from /scratch/data/OceanData (see comments below).
-#   The WOA18 files must be placed under obs_root.
+#   obs_root is the HAMOCC_DIAG obs_data/ directory (subdirectories WOA13/, GLODAPv2/, ...).
+#   Checked against HAMOCC_DIAG/obs_data: file names, variable names and units. Scale factors:
+#     WOA13 o2, AOU: ml/L -> mmol m-3 (44.66); WOA13 nutrients: umol/L = mmol m-3 (1.0)
+#     GLODAPv2 DIC, TAlk: umol/kg -> mol m-3, eq m-3 (1.025e-3)
+#     Landschuetzer fgco2: mol m-2 yr-1, negative = uptake, so -1.0 for flux into the ocean
+#     MODIS pp: mol C m-2 s-1 -> mol C m-2 yr-1 (31536000, as the model's SEC_PER_YEAR)
+#   Regional files with a depth axis (WOA13 nutrients, O2) are read at the surface level.
 # -----------------------------------------
 datasets:
   obs_root: /nird/datalake/NS16000B/blomster/datasets/hamocc
   units_verified: false
   maps:                             # keyed by model variable; also used by the zonal means
-    o2lvl:       {file: woa13_all_o00_01.nc, var: o_an, scale: 1.0}
-    # No AOU file in WOA18 (/scratch/data/OceanData); this legacy WOA13 entry is unverified.
-    aoulvl:      {file: woa13_all_A00_01.nc, var: A_an, scale: 1.0}
-    silvl:       {file: woa13_all_i00_01.nc, var: i_an, scale: 1.0}
-    po4lvl:      {file: woa13_all_p00_01.nc, var: p_an, scale: 1.0}
-    no3lvl:      {file: woa13_all_n00_01.nc, var: n_an, scale: 1.0}
-    # The gridded GLODAPv2.2016b files are not in /scratch/data/OceanData (only a station
-    # extract and the bottle CSV, which would need gridding); unverified legacy entries.
-    dissiclvl:   {file: GLODAPv2.2016b.TCO2_reordered.nc, var: TCO2, scale: 1.0}
-    talklvl:     {file: GLODAPv2.2016b.TAlk_reordered.nc, var: TAlk, scale: 1.0}
-    pco2:        {file: spco2_ETH_ANN_1982-2011.nc, var: spco2, scale: 1.0}
-    co2fxn:      {file: spco2_ETH_ANN_1982-2011.nc, var: fgco2, scale: 1.0}
-    ppint:       {file: OcnProd_MODIS/ave.m.clim_annual_2003-2012.nc, var: pp, scale: 1.0}
+    o2lvl:       {file: WOA13/woa13_all_o00_01.nc, var: o_an, scale: 44.66}
+    aoulvl:      {file: WOA13/woa13_all_A00_01.nc, var: A_an, scale: 44.66}
+    silvl:       {file: WOA13/woa13_all_i00_01.nc, var: i_an, scale: 1.0}
+    po4lvl:      {file: WOA13/woa13_all_p00_01.nc, var: p_an, scale: 1.0}
+    no3lvl:      {file: WOA13/woa13_all_n00_01.nc, var: n_an, scale: 1.0}
+    dissiclvl:   {file: GLODAPv2/GLODAPv2.2016b.TCO2_reordered.nc, var: TCO2, scale: 1.025e-3}
+    talklvl:     {file: GLODAPv2/GLODAPv2.2016b.TAlk_reordered.nc, var: TAlk, scale: 1.025e-3}
+    pco2:        {file: Landschuetzer_2015/spco2_ETH_ANN_1982-2011.nc, var: spco2, scale: 1.0}
+    co2fxn:      {file: Landschuetzer_2015/spco2_ETH_ANN_1982-2011.nc, var: fgco2, scale: -1.0}
+    ppint:       {file: OcnProd_MODIS/ave.m.clim_annual_2003-2012.nc, var: pp, scale: 31536000}
   zonal:
-    # Legacy basin masks on the 1x1 grid (grid_files/1x1d/generic/); variable name not yet verified.
+    # Legacy basin masks on the 1x1 grid (grid_files/1x1d/generic/); variable `mask` verified.
     basin_mask_root: /nird/datalake/NS16000B/blomster/grids/1x1d/generic
     basin_mask_file: region_mask_1x1_{basin}.nc
     basin_mask_var: mask
   # Regional monthly cycles; {region} is ARC, NATL, NPAC, TATL, TPAC, IND, MSO or HSO.
-  # All entries are legacy, pre-cut regional files and unverified. /scratch/data/OceanData has
-  # no regional files; WOA18 there offers only global monthly oxygen (o01-o12) and temperature
-  # (95A4_t01-12, A5B7_t01-12), no monthly nutrients or salinity, and none of the other products.
+  # Pre-cut regional files from HAMOCC_DIAG obs_data/ (all eight regions present).
   regional:
-    pco2:    {file: "spco2_ETH_MON_1982-2011_{region}.nc", var: spco2, scale: 1.0}
-    co2fxn:  {file: "spco2_ETH_MON_1982-2011_{region}.nc", var: fgco2, scale: 1.0}
-    ppint:   {file: "OcnProd_MODIS/ave.m.clim_MON_2003-2012_{region}.nc", var: pp, scale: 1.0}
-    srfo2:   {file: "woa13_all_oMON_01_{region}.nc", var: o_an, scale: 1.0}
-    srfsi:   {file: "woa13_all_iMON_01_{region}.nc", var: i_an, scale: 1.0}
-    srfpo4:  {file: "woa13_all_pMON_01_{region}.nc", var: p_an, scale: 1.0}
-    srfno3:  {file: "woa13_all_nMON_01_{region}.nc", var: n_an, scale: 1.0}
-    sst:     {file: "woa13_decav_tMON_01_{region}.nc", var: t_an, scale: 1.0}
-    sss:     {file: "woa13_decav_sMON_01_{region}.nc", var: s_an, scale: 1.0}
+    pco2:    {file: "Landschuetzer_2015/spco2_ETH_MON_1982-2011_{region}.nc", var: spco2, scale: 1.0}
+    co2fxn:  {file: "Landschuetzer_2015/spco2_ETH_MON_1982-2011_{region}.nc", var: fgco2, scale: -1.0}
+    ppint:   {file: "OcnProd_MODIS/ave.m.clim_MON_2003-2012_{region}.nc", var: pp, scale: 31536000}
+    srfo2:   {file: "WOA13/woa13_all_oMON_01_{region}.nc", var: o_an, scale: 44.66}
+    srfsi:   {file: "WOA13/woa13_all_iMON_01_{region}.nc", var: i_an, scale: 1.0}
+    srfpo4:  {file: "WOA13/woa13_all_pMON_01_{region}.nc", var: p_an, scale: 1.0}
+    srfno3:  {file: "WOA13/woa13_all_nMON_01_{region}.nc", var: n_an, scale: 1.0}
+    sst:     {file: "WOA13/woa13_decav_tMON_01_{region}.nc", var: t_an, scale: 1.0}
+    sss:     {file: "WOA13/woa13_decav_sMON_01_{region}.nc", var: s_an, scale: 1.0}
     mld:     {file: "MLD/mld_clim_WOCE_1x1_{region}.nc", var: mld, scale: 1.0}
