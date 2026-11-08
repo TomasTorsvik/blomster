@@ -20,6 +20,23 @@ plot functions as T2, so do T2 first). T4 builds on T3's plot code only for the 
 * Done when: unit test on synthetic masks; for NATL and IND the model-side cell count per variable equals the
   mask's cell count; the real-data check (obs-only) still passes.
 
+### Status (T1)
+* Done 2026-11-08. Legacy per-variable files `grid_files/1x1d/<var>/region_mask_1x1_<region>.nc` (variable `mask`,
+  lon -179.5..179.5, dims `(time=12, [depth=1], lat, lon)`) are **monthly** and already equal generic region AND
+  `<var>_mask_1x1.nc` (checked for NATL and IND); co2fxn has no directory, so it uses `co2fxd` (identical to `co2fxu`).
+  New: `regions.load_variable_mask`, `combine_masks`, `variable_region_mask` (order: per-variable region file, else
+  generic region mask AND `<var>_mask_1x1.nc`, else generic region mask); `obs_cycle` now labels months before
+  averaging so monthly masks line up; recipe `datasets.regional_mask` (root, region_file, var_file, var, alias);
+  `regional.ipynb` uses per-variable masks for model and obs.
+* Files: `hamocc/regions.py`, `recipe_hamocc.yml`, `notebooks_hamocc/regional/regional.ipynb`,
+  `tests/test_hamocc_regions.py`, `hamocc_workplan.md`.
+* Tests: `PYTHONPATH=. python -m pytest tests` -> 46 passed, including synthetic masks and a read-only check against
+  the real legacy files: per-month cell counts for all ten regional variables equal the mask files' for NATL and IND.
+* Not verified: the notebook was not executed (no real model output); recipe `root` is the `/nird/...` convention
+  path (the local copy is `/scratch/data/noresm-diagnostics-data/HAMOCC_DIAG/grid_files/1x1d`). The generic
+  `regions.region_mask` NATL has 3037 cells vs 3089 in legacy `generic/region_mask_1x1_NATL.nc` (IND matches); this
+  is only seen if the fallback path is used, and could be a follow-up. Obs pre-cut regional files are unchanged.
+
 ## T2. Mean and RMSE statistics on maps and sections
 * Legacy: `plot_latlon.ncl`, `plot_latlon_z.ncl` print area-weighted mean of model and obs and model-obs RMSE
   in the panel titles (computed on cells valid in both).

@@ -99,6 +99,15 @@ datasets:
     basin_mask_root: /nird/datalake/NS16000B/blomster/grids/1x1d/generic
     basin_mask_file: region_mask_1x1_{basin}.nc
     basin_mask_var: mask
+  # Legacy per-variable masks (grid_files/1x1d/<var>/): region_mask_1x1_<region>.nc is region AND data coverage,
+  # monthly, variable `mask`; used by HAMOCC_DIAG for model and obs alike. Falls back to the generic region mask
+  # combined with <var>_mask_1x1.nc, then to the generic region mask. co2fxn uses the co2fxd masks.
+  regional_mask:
+    root: /nird/datalake/NS16000B/blomster/grids/1x1d   # = HAMOCC_DIAG/grid_files/1x1d
+    region_file: "{var}/region_mask_1x1_{region}.nc"
+    var_file: "{var}/{var}_mask_1x1.nc"
+    var: mask
+    alias: {co2fxn: co2fxd}
   # Regional monthly cycles; {region} is ARC, NATL, NPAC, TATL, TPAC, IND, MSO or HSO.
   # Pre-cut regional files from HAMOCC_DIAG obs_data/ (all eight regions present).
   regional:
