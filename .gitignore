@@ -215,6 +215,10 @@ tempCodeRunnerFile.py
 CLAUDE.md
 .claude/
 
+# temporary directories
+tmp/
+tmp-*/
+
 # Ruff stuff:
 .ruff_cache/
 
