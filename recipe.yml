@@ -3,7 +3,7 @@
 # -----------------------------------------
 blomster:
   version: 0.1
-     source_root: /nird/datalake/NS16000B/blomster
+  source_root: /nird/datalake/NS16000B/blomster
 
 # -----------------------------------------
 #   Configuration for the simulation
@@ -13,8 +13,8 @@ experiment:
   input_root  : /nird/datalake/NS9560K/noresm3/cases
   work_root   : /scratch/yanchun/diagnostics/blomster
   www_root    : /nird/datalake/NS9560K/www/diagnostics/blomster/yanchun
-  year_start  : 1
-  year_end    : 50
+  year_start  : 0001
+  year_end    : 0050
 
 # -----------------------------------------
 #   Configuration for required variables

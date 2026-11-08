@@ -9,7 +9,7 @@ def load(grid_file, grid_type='p'):
         grid_type (str): Grid type (e.g., 'p').
 
     Returns:
-        tuple: Latitude, longitude, and extended vertices (clat, clon).
+        tuple: Latitude, longitude, depth, mask and extended vertices (clat, clon).
     """
     with xr.open_dataset(grid_file) as grid:
         lat = grid[grid_type + 'lat'].data

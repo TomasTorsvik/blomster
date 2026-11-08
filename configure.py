@@ -2,20 +2,17 @@
 from pathlib import Path
 
 #import papermill as pm
-import yaml
+from ruamel.yaml import YAML
 from pyprojroot import here
 
 # Get project root
 root_path = Path(here())
 
 # load recipe
+yaml=YAML()
 with open(root_path.joinpath('recipe.yml'), 'r') as f:
-    cfg = yaml.safe_load(f)
+    cfg = yaml.load(f)
 
-#try:
-#    climo = cfg['variables']['models']['blom']['hy']['climo']
-#except (KeyError, TypeError):
-#    climo = None
 
 # generate TOC
 toc = {}
@@ -25,7 +22,7 @@ toc = {
     'chapters': cfg['diagnostics']['chapters']
 }
 with open(root_path.joinpath('notebooks/_toc.yml'), 'w') as f:
-    yaml.dump(toc, f, default_flow_style=False, sort_keys=False)
+    yaml.dump(toc, f)
 
 # prepare notebooks (inject to all ipynb)
 #notebooks = Path("notebooks")
@@ -76,4 +73,4 @@ settings = {
 }
 
 with open(root_path.joinpath('notebooks/settings.yml'), "w") as f:
-    yaml.dump(settings, f, default_flow_style=False, sort_keys=False)
+    yaml.dump(settings, f)

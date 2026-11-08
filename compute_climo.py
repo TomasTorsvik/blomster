@@ -8,13 +8,14 @@ import subprocess
 #import sys
 from pathlib import Path
 
-import yaml
+from ruamel.yaml import YAML
 from pyprojroot import here
 # Get project root
 root_path = Path(here())
 
+yaml=YAML()
 with open(root_path.joinpath('recipe.yml')) as f:
-    cfg = yaml.safe_load(f)
+    cfg = yaml.load(f)
     experiment = cfg["experiment"]
     variables = cfg["variables"]
     caseid = experiment["caseid"]
@@ -75,7 +76,7 @@ for model, tags in variables.items():       # model: [blom, hamocc]
 # Save generated climatology information to a YAML file
 settings_file = "notebooks/settings.yml"
 with open(root_path.joinpath(settings_file), "r") as f:
-    settings = yaml.safe_load(f)
+    settings = yaml.load(f)
 
 settings["climos"] = {
     "blom": {
@@ -171,4 +172,4 @@ settings['climos']['hamocc']['hbgcy']['ANN'] = f"{work_root}/{caseid}/hamocc/hbg
 
 # Write the structure to a YAML file
 with open(root_path.joinpath(settings_file), "w") as f:
-    yaml.dump(settings, f, default_flow_style=False, sort_keys=False)
+    yaml.dump(settings, f)
