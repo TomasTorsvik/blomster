@@ -83,3 +83,126 @@ def test_load_obs_region_selects_surface(tmp_path):
     assert out.sizes["time"] == 12
     assert float(out.isel(time=0).squeeze()) == 0.0
     assert float(out.isel(time=1).squeeze()) == 4.0
+
+
+# ---- per-variable masks --------------------------------------------------
+
+def _write_mask(path, arr, monthly=False, depth=False, lon=None):
+    """Write a legacy-style mask file (lon -179.5..179.5, optional time/depth axes)."""
+    lon = np.arange(-179.5, 180, 1.0) if lon is None else lon
+    lat = np.arange(-89.5, 90, 1.0)
+    data = np.broadcast_to(arr, (12,) + arr.shape).copy() if monthly else arr
+    dims = ("time", "lat", "lon") if monthly else ("lat", "lon")
+    if depth:
+        data = data[:, None] if monthly else data[None]
+        dims = (dims[0], "depth") + dims[1:] if monthly else ("depth",) + dims
+    coords = {"lat": lat, "lon": lon}
+    if monthly:
+        coords["time"] = np.arange(12.0)
+    if depth:
+        coords["depth"] = [0.0]
+    xr.Dataset({"mask": (dims, data.astype(float))}, coords=coords).to_netcdf(path)
+
+
+def test_load_variable_mask_normalises(tmp_path):
+    arr = np.zeros((180, 360)); arr[100, 0] = 1  # lon -179.5
+    _write_mask(tmp_path / "m.nc", arr, monthly=True, depth=True)
+    m = regions.load_variable_mask(tmp_path / "m.nc")
+    assert m.dims == ("month", "lat", "lon") and m.dtype == bool
+    assert float(m["lon"].min()) == 0.5 and float(m["lon"].max()) == 359.5
+    assert bool(m.sel(lat=10.5, lon=180.5, month=3))
+    assert int(m.isel(month=0).sum()) == 1
+
+
+def test_combine_masks_is_intersection():
+    g = zonal.target_grid()
+    reg = xr.DataArray(np.zeros((180, 360), bool), dims=("lat", "lon"), coords={"lat": g["lat"], "lon": g["lon"]})
+    reg[:, :100] = True
+    var = reg.copy(data=np.zeros((180, 360), bool)); var[:, 50:150] = True
+    out = regions.combine_masks(reg, var)
+    assert int(out.sum()) == 180 * 50
+
+
+def _setup(tmp_path, region_cells, var_cells):
+    g = zonal.target_grid()
+    glb, _ = _basin(lambda la, lo: np.ones_like(la))
+    masks = {"atl": glb, "glb": glb, "pac": glb * 0, "ind": glb * 0}
+    natl = regions.region_mask(masks, "NATL", g)
+    d = tmp_path / "pco2"; d.mkdir()
+    if region_cells is not None:
+        _write_mask(d / "region_mask_1x1_NATL.nc", region_cells, monthly=True)
+    if var_cells is not None:
+        _write_mask(d / "pco2_mask_1x1.nc", var_cells, monthly=True)
+    spec = {"root": str(tmp_path), "region_file": "{var}/region_mask_1x1_{region}.nc",
+            "var_file": "{var}/{var}_mask_1x1.nc", "var": "mask", "alias": {"alias_var": "pco2"}}
+    return natl, spec
+
+
+def test_variable_region_mask_prefers_region_file(tmp_path):
+    cells = np.zeros((180, 360)); cells[130:140, 10:20] = 1   # lat 40.5-49.5, lon -170..-160
+    natl, spec = _setup(tmp_path, cells, np.ones((180, 360)))
+    out = regions.variable_region_mask("pco2", "NATL", natl, spec)
+    assert out.dims == ("month", "lat", "lon")
+    assert int(out.isel(month=0).sum()) == 100          # the region file's count, not the generic one
+    assert int(natl.sum()) != 100
+    alias = regions.variable_region_mask("alias_var", "NATL", natl, spec)
+    assert int(alias.isel(month=5).sum()) == 100
+
+
+def test_variable_region_mask_falls_back_to_variable_mask(tmp_path):
+    var = np.ones((180, 360)); var[:, :180] = 0              # lon -179.5..-0.5 invalid -> 180.5..359.5 invalid
+    natl, spec = _setup(tmp_path, None, var)
+    out = regions.variable_region_mask("pco2", "NATL", natl, spec)
+    assert int(out.isel(month=0).sum()) == int((natl & (natl["lon"] < 180)).sum())
+    # no files at all, or no spec: generic region mask
+    assert regions.variable_region_mask("pco2", "NATL", natl, None) is natl
+    (tmp_path / "empty").mkdir()
+    natl2, spec2 = _setup(tmp_path / "empty", None, None)
+    assert regions.variable_region_mask("pco2", "NATL", natl2, spec2).equals(natl2)
+
+
+def test_model_and_obs_cycles_share_monthly_mask(tmp_path):
+    g = zonal.target_grid()
+    mask = xr.DataArray(np.zeros((12, 180, 360), bool), dims=("month", "lat", "lon"),
+                        coords={"month": np.arange(1, 13), "lat": g["lat"], "lon": g["lon"]})
+    mask[:, 100:110, 100:110] = True
+    mask[0, 100:110, 100:105] = False                         # January has fewer valid cells
+    field = np.full((12, 180, 360), 5.0); field[:, 100:110, 105:110] = 7.0
+    da = xr.DataArray(field, dims=("month", "lat", "lon"),
+                      coords={"month": np.arange(1, 13), "lat": g["lat"], "lon": g["lon"]})
+    model = regions.model_cycle(da, mask)
+    assert float(model.sel(month=1)) == pytest.approx(7.0)    # only the 7.0 cells are valid
+    assert float(model.sel(month=2)) == pytest.approx(6.0, abs=0.01)
+    obs_da = da.rename(month="time").assign_coords(lon=da["lon"].where(da["lon"] < 180, da["lon"] - 360))  # obs-style: time axis, lon -180..180
+    obs = regions.obs_cycle(obs_da, mask)
+    np.testing.assert_allclose(obs.values, model.values)
+    assert obs.dims == ("month",)
+
+
+import pathlib
+
+_LEGACY = pathlib.Path("/scratch/data/noresm-diagnostics-data/HAMOCC_DIAG/grid_files/1x1d")
+
+
+@pytest.mark.skipif(not _LEGACY.exists(), reason="legacy HAMOCC_DIAG grid files not available")
+@pytest.mark.parametrize("region", ["NATL", "IND"])
+def test_real_masks_cell_counts(region):
+    """Per-variable cell counts on the 1x1 target grid equal the legacy mask files' (read-only check)."""
+    g = zonal.target_grid()
+    glb = zonal.load_basin_mask(_LEGACY / "generic/region_mask_1x1_glb.nc", "mask")
+    basins = {b: zonal.load_basin_mask(_LEGACY / f"generic/region_mask_1x1_{b}.nc", "mask")
+              for b in ("atl", "ind", "pac")}
+    basins["glb"] = glb
+    gen = regions.region_mask(basins, region, g)
+    spec = {"root": str(_LEGACY), "region_file": "{var}/region_mask_1x1_{region}.nc",
+            "var_file": "{var}/{var}_mask_1x1.nc", "var": "mask", "alias": {"co2fxn": "co2fxd"}}
+    for name in ("pco2", "co2fxn", "ppint", "srfo2", "srfsi", "srfpo4", "srfno3", "sst", "sss", "mld"):
+        key = spec["alias"].get(name, name)
+        with xr.open_dataset(_LEGACY / f"{key}/region_mask_1x1_{region}.nc", decode_times=False) as ds:
+            ref = (ds["mask"].squeeze() > 0).sum(["lat", "lon"]).values   # per month
+        out = regions.variable_region_mask(name, region, gen, spec)
+        np.testing.assert_array_equal(out.sum(["lat", "lon"]).values, ref)
+        # fallback path (generic region AND variable mask) agrees for IND, where generic == legacy region
+        if region == "IND":
+            fb = regions.combine_masks(gen, regions.load_variable_mask(_LEGACY / f"{key}/{key}_mask_1x1.nc"))
+            np.testing.assert_array_equal(fb.sum(["lat", "lon"]).values, ref)
