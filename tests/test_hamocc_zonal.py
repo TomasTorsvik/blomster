@@ -48,7 +48,8 @@ def test_basin_zonal_means_same_cells():
 
 
 def test_normalize_lon_wraps_and_sorts():
-    da = xr.DataArray([1, 2, 3], dims="lon", coords={"lon": [-90.0, 0.0, 90.0]})
+    da = xr.DataArray([1, 2, 3], dims="lon", coords={
+                      "lon": [-90.0, 0.0, 90.0]})
     out = zonal.normalize_lon(da)
     assert out["lon"].values.tolist() == [0.0, 90.0, 270.0]
     assert out.values.tolist() == [2, 3, 1]
@@ -59,6 +60,7 @@ def test_on_target_grid_interpolates_depth():
                        dims=("depth", "lat", "lon"),
                        coords={"depth": [0.0, 10.0, 20.0],
                                "lat": np.arange(-89.5, 90, 1.0), "lon": np.arange(0.5, 360, 1.0)})
-    out = zonal.on_target_grid(obs, zonal.target_grid(1.0), depth=xr.DataArray([5.0, 15.0], dims="depth"))
+    out = zonal.on_target_grid(obs, zonal.target_grid(
+        1.0), depth=xr.DataArray([5.0, 15.0], dims="depth"))
     assert float(out.isel(lat=90, lon=100)[0]) == pytest.approx(0.5)
     assert float(out.isel(lat=90, lon=100)[1]) == pytest.approx(1.5)

@@ -12,7 +12,8 @@ def test_co2_flux_pg_per_year():
 def test_co2_net_molar_scale():
     # kg C m-2 s-1 -> mol C m-2 yr-1 (1000 g/kg / 12 g/mol)
     flux = 1e-9
-    assert flux * v.CO2_NET.scale == pytest.approx(flux * 86400 * 365 * 1000 / 12)
+    assert flux * \
+        v.CO2_NET.scale == pytest.approx(flux * 86400 * 365 * 1000 / 12)
 
 
 def test_aou_is_saturation_minus_o2():
@@ -24,6 +25,7 @@ def test_co2_net_sign():
 
 
 def test_regions_cover_expected_names():
-    assert set(v.REGIONS) == {"ARC", "NATL", "NPAC", "TATL", "TPAC", "IND", "MSO", "HSO"}
+    assert set(v.REGIONS) == {"ARC", "NATL", "NPAC",
+                              "TATL", "TPAC", "IND", "MSO", "HSO"}
     for _, lo, hi in v.REGIONS.values():
         assert lo < hi

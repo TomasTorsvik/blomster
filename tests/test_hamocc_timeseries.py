@@ -34,7 +34,8 @@ def test_volume_mean_ignores_missing():
 
 
 def test_level_thickness_clips_to_zmax():
-    bnds = xr.DataArray([[0.0, 50.0], [50.0, 150.0], [150.0, 400.0]], dims=("depth", "bnds"))
+    bnds = xr.DataArray([[0.0, 50.0], [50.0, 150.0], [
+                        150.0, 400.0]], dims=("depth", "bnds"))
     dz = ts.level_thickness(bnds, 0.0, 100.0)
     assert dz.values.tolist() == [50.0, 50.0, 0.0]
 
@@ -47,7 +48,8 @@ def test_level_thickness_uses_last_dim_as_bounds():
 
 def test_upper_ocean_mean_uses_only_top_100m():
     parea = _grid()
-    bnds = xr.DataArray([[0.0, 50.0], [50.0, 150.0], [150.0, 400.0]], dims=("depth", "bnds"))
+    bnds = xr.DataArray([[0.0, 50.0], [50.0, 150.0], [
+                        150.0, 400.0]], dims=("depth", "bnds"))
     da = xr.DataArray(np.zeros((1, 3, 2, 3)), dims=("time", "depth", "y", "x"))
     da[:, 0] = 1.0
     da[:, 1] = 2.0
@@ -58,8 +60,10 @@ def test_upper_ocean_mean_uses_only_top_100m():
 
 def test_flux_series_net_co2_pg_per_year():
     parea = _grid()  # total area 12 m2
-    fxd = xr.DataArray(np.full((2, 2, 3), 3e-9), dims=("time", "y", "x"), coords={"time": _time(2)})
-    fxu = xr.DataArray(np.full((2, 2, 3), 1e-9), dims=("time", "y", "x"), coords={"time": _time(2)})
+    fxd = xr.DataArray(np.full((2, 2, 3), 3e-9),
+                       dims=("time", "y", "x"), coords={"time": _time(2)})
+    fxu = xr.DataArray(np.full((2, 2, 3), 1e-9),
+                       dims=("time", "y", "x"), coords={"time": _time(2)})
     ds = xr.Dataset({"co2fxd": fxd, "co2fxu": fxu})
     out = ts.flux_series(ds, "co2fxn", parea)
     expected = (2e-9 * 12) * v.FLUX_TS_VARS["co2fxd"].scale
@@ -81,7 +85,8 @@ def test_global_mean_series_scales_to_mmol():
 
 def test_global_mean_series_weights_levels_by_thickness_and_zmax():
     parea = _grid()
-    o2 = xr.DataArray(np.zeros((1, 2, 2, 3)), dims=("time", "depth", "y", "x"), coords={"time": _time(1)})
+    o2 = xr.DataArray(np.zeros((1, 2, 2, 3)), dims=(
+        "time", "depth", "y", "x"), coords={"time": _time(1)})
     o2[:, 0] = 1.0
     o2[:, 1] = 3.0
     bnds = xr.DataArray([[0.0, 50.0], [50.0, 150.0]], dims=("depth", "bounds"))

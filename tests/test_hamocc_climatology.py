@@ -10,7 +10,8 @@ def _ds(vals_by_name, nt=2, nz=3):
     depth = [0.0, 100.0, 500.0]
     data = {}
     for name, val in vals_by_name.items():
-        dims = ("time", "depth", "y", "x") if name.endswith("lvl") else ("time", "y", "x")
+        dims = ("time", "depth", "y", "x") if name.endswith(
+            "lvl") else ("time", "y", "x")
         shape = (nt, nz, 2, 2) if name.endswith("lvl") else (nt, 2, 2)
         arr = xr.DataArray(np.full(shape, val, dtype=float), dims=dims)
         data[name] = arr
@@ -46,7 +47,8 @@ def test_unknown_variable_raises():
 
 
 def test_difference_keeps_units():
-    a = xr.DataArray([2.0], dims="x", name="o2lvl", attrs={"units": "mmol m-3"})
+    a = xr.DataArray([2.0], dims="x", name="o2lvl",
+                     attrs={"units": "mmol m-3"})
     b = xr.DataArray([0.5], dims="x")
     out = clim.difference(a, b)
     assert float(out[0]) == 1.5 and out.attrs["units"] == "mmol m-3"

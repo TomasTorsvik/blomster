@@ -1,11 +1,11 @@
 import matplotlib
-
-matplotlib.use("Agg")
 import numpy as np
 import pytest
 import xarray as xr
 
 from hamocc import climatology, plots
+
+matplotlib.use("Agg")
 
 
 def _field(values, lat=None):
@@ -42,7 +42,8 @@ def test_stats_no_common_cells_is_nan():
 
 def test_section_stats_use_coslat_weights():
     lat = np.array([0.0, 60.0])
-    obs = xr.DataArray(np.zeros((2, 3)), dims=("lat", "depth"), coords={"lat": lat, "depth": [0.0, 10.0, 20.0]})
+    obs = xr.DataArray(np.zeros((2, 3)), dims=("lat", "depth"), coords={
+                       "lat": lat, "depth": [0.0, 10.0, 20.0]})
     model = obs.copy()
     model[0] = 1.0  # equator bias 1, 60N bias 0; weights 1 and 0.5
     s = climatology.stats(model, obs, climatology.section_area(model))
@@ -59,20 +60,25 @@ def test_zonal_panels_title_shows_numbers():
     fig = plots.zonal_panels(model, obs)
     title = fig.axes[2].get_title()
     assert "bias 0.5" in title and "RMSE 0.5" in title
-    assert plots.zonal_panels(model, obs, area=False).axes[2].get_title() == "Model - obs"
+    assert plots.zonal_panels(
+        model, obs, area=False).axes[2].get_title() == "Model - obs"
 
 
 def test_map_panels_title_shows_numbers_only_with_area():
     pytest.importorskip("cartopy")
     ny, nx = 6, 8
-    lon, lat = np.meshgrid(np.arange(nx) * 45.0 - 180, np.linspace(-60, 60, ny))
+    lon, lat = np.meshgrid(np.arange(nx) * 45.0 - 180,
+                           np.linspace(-60, 60, ny))
     corners_lon = np.arange(nx + 1) * 45.0 - 202.5
     corners_lat = np.linspace(-70, 70, ny + 1)
     clon, clat = np.meshgrid(corners_lon, corners_lat)
     rng = np.random.default_rng(0)
-    obs = xr.DataArray(rng.random((ny, nx)), dims=("y", "x"), name="v", attrs={"units": "u", "long_name": "V"})
+    obs = xr.DataArray(rng.random((ny, nx)), dims=("y", "x"),
+                       name="v", attrs={"units": "u", "long_name": "V"})
     model = (obs + 3.0).assign_attrs(obs.attrs)
     area = xr.DataArray(np.ones((ny, nx)), dims=("y", "x"))
     fig = plots.map_panels(clon, clat, model, obs, area=area)
-    assert "bias 3" in fig.axes[2].get_title() and "RMSE 3" in fig.axes[2].get_title()
-    assert plots.map_panels(clon, clat, model, obs).axes[2].get_title() == "Model - obs"
+    assert "bias 3" in fig.axes[2].get_title(
+    ) and "RMSE 3" in fig.axes[2].get_title()
+    assert plots.map_panels(
+        clon, clat, model, obs).axes[2].get_title() == "Model - obs"
