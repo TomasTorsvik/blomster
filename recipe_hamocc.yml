@@ -83,12 +83,12 @@ datasets:
   obs_root: /nird/datalake/NS16000B/blomster/datasets/hamocc
   units_verified: false
   maps:                             # keyed by model variable; also used by the zonal means
-    o2lvl:       {file: woa18_all_o00_01.nc, var: o_an, scale: 1.025}   # WOA18, umol/kg -> mmol m-3
+    o2lvl:       {file: woa13_all_o00_01.nc, var: o_an, scale: 1.0}
     # No AOU file in WOA18 (/scratch/data/OceanData); this legacy WOA13 entry is unverified.
     aoulvl:      {file: woa13_all_A00_01.nc, var: A_an, scale: 1.0}
-    silvl:       {file: woa18_all_i00_01.nc, var: i_an, scale: 1.025}
-    po4lvl:      {file: woa18_all_p00_01.nc, var: p_an, scale: 1.025}
-    no3lvl:      {file: woa18_all_n00_01.nc, var: n_an, scale: 1.025}
+    silvl:       {file: woa13_all_i00_01.nc, var: i_an, scale: 1.0}
+    po4lvl:      {file: woa13_all_p00_01.nc, var: p_an, scale: 1.0}
+    no3lvl:      {file: woa13_all_n00_01.nc, var: n_an, scale: 1.0}
     # The gridded GLODAPv2.2016b files are not in /scratch/data/OceanData (only a station
     # extract and the bottle CSV, which would need gridding); unverified legacy entries.
     dissiclvl:   {file: GLODAPv2.2016b.TCO2_reordered.nc, var: TCO2, scale: 1.0}
