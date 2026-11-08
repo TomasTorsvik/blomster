@@ -211,6 +211,10 @@ cython_debug/
 # Temporary file for partial code execution
 tempCodeRunnerFile.py
 
+# AI tools
+CLAUDE.md
+.claude/
+
 # Ruff stuff:
 .ruff_cache/
 
