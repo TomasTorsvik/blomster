@@ -54,8 +54,8 @@ def history_files(input_root, caseid, tag, year_start, year_end, component="blom
     return files
 
 
-def open_history(files, variables=None, **kwargs):
-    """Open history files as one dataset, keeping `variables` plus grid/weight fields."""
+def open_available(files, variables=None, **kwargs):
+    """Open history files keeping the `variables` that are present: returns (dataset, sorted list of missing names)."""
     ds = xr.open_mfdataset(
         files,
         combine="by_coords",
@@ -68,7 +68,41 @@ def open_history(files, variables=None, **kwargs):
     if variables is not None:
         keep = [v for v in variables if v in ds]
         missing = sorted(set(variables) - set(keep))
-        if missing:
-            raise KeyError(f"Variables not in history files: {missing}")
         ds = ds[keep]
+    else:
+        missing = []
+    return ds, missing
+
+
+def open_history(files, variables=None, strict=True, **kwargs):
+    """Open history files as one dataset, keeping `variables` plus grid/weight fields.
+
+    Strict (default): raise KeyError if any of `variables` is absent. With `strict=False` the
+    absent ones are dropped silently; use `open_available` to also get their names.
+    """
+    ds, missing = open_available(files, variables, **kwargs)
+    if missing and strict:
+        raise KeyError(f"Variables not in history files: {missing}")
     return ds
+
+
+def usable(ds, names, needs):
+    """Split `names` into those whose inputs are all in `ds` and the rest.
+
+    `needs(name)` lists the history variables a name is built from (e.g. `climatology.history_names`).
+    Returns (usable names in order, {skipped name: [missing history variables]}).
+    """
+    ok, skipped = [], {}
+    for name in names:
+        absent = [h for h in needs(name) if h not in ds]
+        if absent:
+            skipped[name] = absent
+        else:
+            ok.append(name)
+    return ok, skipped
+
+
+def report_skipped(skipped, what="Skipped"):
+    """Print one line per skipped name, with the history variables it lacks."""
+    for name, absent in skipped.items():
+        print(f"{what} {name}: not in the history files ({', '.join(absent)})")

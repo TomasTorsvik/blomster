@@ -23,6 +23,15 @@ def load_parea(grid_file, dims=HORIZONTAL_DIMS, name="parea"):
     return xr.DataArray(data, dims=dims, name="parea", attrs={"units": "m2"})
 
 
+def history_names(name):
+    """History variables needed for the time series `name` (concentration, flux or net CO2 flux)."""
+    if name in v.CONC_TS_VARS:
+        return [f"{name}lvl", "depth_bnds"]
+    if name == "co2fxn":
+        return ["co2fxd", "co2fxu"]
+    return [name]
+
+
 def annual_index(da, offset=0):
     """Replace the cftime time axis by integer model years (plus `offset`)."""
     year = da["time"].dt.year.values + offset

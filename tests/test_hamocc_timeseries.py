@@ -95,3 +95,9 @@ def test_global_mean_series_weights_levels_by_thickness_and_zmax():
 def test_drift():
     s = xr.DataArray([1.0, 2.0, 3.0], dims="year", coords={"year": [1, 2, 3]})
     assert ts.drift(s) == pytest.approx(1.0)
+
+
+def test_history_names():
+    assert ts.history_names("o2") == ["o2lvl", "depth_bnds"]
+    assert ts.history_names("co2fxn") == ["co2fxd", "co2fxu"]
+    assert ts.history_names("ppint") == ["ppint"]

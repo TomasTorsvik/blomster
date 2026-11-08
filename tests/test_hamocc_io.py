@@ -60,3 +60,42 @@ def test_period_rejects_bad_input():
         io.period({"year_start": 1, "year_end": 5, "climo_year_start": 9}, "climo")
     with pytest.raises(ValueError):
         io.period({"year_start": 1, "year_end": 5}, "other")
+
+
+def _write_case(tmp_path, variables):
+    import numpy as np
+    import xarray as xr
+    hist = tmp_path / "case" / "ocn" / "hist"
+    hist.mkdir(parents=True)
+    ds = xr.Dataset({v: (("y", "x"), np.ones((2, 2))) for v in variables})
+    ds.to_netcdf(hist / "case.blom.hbgcy.0001.nc")
+    return io.history_files(tmp_path, "case", "hbgcy", 1, 1)
+
+
+def test_open_available_returns_present_and_missing(tmp_path):
+    files = _write_case(tmp_path, ["o2lvl", "ppint"])
+    ds, missing = io.open_available(files, ["o2lvl", "ppint", "delta13clvl", "pp_tot"])
+    assert sorted(ds.data_vars) == ["o2lvl", "ppint"]
+    assert missing == ["delta13clvl", "pp_tot"]
+
+
+def test_open_history_strict_by_default_and_lenient_on_request(tmp_path):
+    files = _write_case(tmp_path, ["o2lvl"])
+    with pytest.raises(KeyError, match="pp_tot"):
+        io.open_history(files, ["o2lvl", "pp_tot"])
+    assert list(io.open_history(files, ["o2lvl", "pp_tot"], strict=False).data_vars) == ["o2lvl"]
+
+
+def test_usable_splits_names_and_lists_absent_inputs(tmp_path):
+    from hamocc import climatology
+    files = _write_case(tmp_path, ["o2lvl", "co2fxd", "co2fxu"])
+    ds, _ = io.open_available(files)
+    ok, skipped = io.usable(ds, ["o2lvl", "aoulvl", "co2fxn", "pco2"], climatology.history_names)
+    assert ok == ["o2lvl", "co2fxn"]
+    assert skipped == {"aoulvl": ["p_o2lvl"], "pco2": ["pco2"]}
+
+
+def test_report_skipped_names_what_is_missing(capsys):
+    io.report_skipped({"aoulvl": ["p_o2lvl"]})
+    out = capsys.readouterr().out
+    assert "aoulvl" in out and "p_o2lvl" in out

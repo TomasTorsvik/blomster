@@ -118,6 +118,19 @@ plot functions as T2, so do T2 first). T4 builds on T3's plot code only for the 
 * Done when: test with a dataset lacking some variables; notebooks run on the real test case without errors
   and name what was skipped.
 
+### Status (T5)
+* Done 2026-11-08. `io.open_available(files, variables)` returns `(dataset, missing names)`; `io.open_history` stays strict by
+  default (`strict=False` drops absent names). `io.usable(ds, names, needs)` splits names into plottable ones and
+  `{name: [absent inputs]}` (derived fields via `climatology.history_names`; time series via new `timeseries.history_names`);
+  `io.report_skipped` prints "Skipped <name>: not in the history files (...)". All four notebooks open leniently and skip
+  per variable (maps, zonal means: plot loops use the usable names; regional: `show` returns early; time series: unused axes
+  hidden). With a control case a variable must exist in both cases.
+* Files: `hamocc/io.py`, `hamocc/timeseries.py`, the four notebooks, `tests/test_hamocc_io.py`, `tests/test_hamocc_timeseries.py`.
+* Tests: `blomster-env` python, 72 passed. Read-only check on the real test case: `open_available` reports `delta13clvl`,
+  `o2`, `pp_tot` as missing in hbgcy/hbgcm/hm; the recipe's own lists are complete there (nothing skipped).
+* Not verified: the notebooks were not executed end to end (needs the `tnx1v4` grid file path); the skip logic itself was
+  only tested via the helpers.
+
 ## T6. Delta13C and `pp_tot` (optional, only if the model writes them)
 * Delta13C: add `delta13clvl` to `variables.LEVEL_VARS`, obs entry for `$LEGACY_DATA/obs_data/EideM-etal_2017/C13_Climatology.nc`
   (legacy variable `c13_pi`; check units and depth axis), include in maps and zonal means.
