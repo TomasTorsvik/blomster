@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.path as mpath
 
-def plot_map2d(lon, lat, var, proj='PlateCarree', norm=None, cmap=mpl.colormaps['viridis'], *,ax=None):
+def plot_map2d(lon, lat, var, proj='PlateCarree', norm=None, cmap=mpl.colormaps['viridis'], *,ax=None, right_labels=True, cbar_labelsize=14, cbar_ticksize=12):
     """
     Plot 2D map with a north pole view.
 
@@ -40,10 +40,11 @@ def plot_map2d(lon, lat, var, proj='PlateCarree', norm=None, cmap=mpl.colormaps[
     ax.add_feature(cfeature.LAND, facecolor='lightgray')
     gl = ax.gridlines(ylocs=range(-90, 90, 30), draw_labels=True)
     gl.ylocator = mpl.ticker.FixedLocator(range(-90,90,30))
+    gl.right_labels = right_labels
 
     # Add colorbar
     cb = fig.colorbar(pm, ax=ax, fraction=0.2, shrink=0.4, label='[yr]')
-    cb.set_label(label=var.units, size=14)
-    cb.ax.tick_params(labelsize=12)
+    cb.set_label(label=var.units, size=cbar_labelsize)
+    cb.ax.tick_params(labelsize=cbar_ticksize)
 
     return fig, ax

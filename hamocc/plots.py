@@ -1,5 +1,6 @@
 """Plotting helpers for the HAMOCC diagnostics."""
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator, ScalarFormatter
 
 
 def plot_series(series, labels=None, ax=None, title=None):
@@ -16,8 +17,10 @@ def plot_series(series, labels=None, ax=None, title=None):
                      } [{first.attrs.get('units', '')}]")
     ax.set_title(title or first.attrs.get("long_name", first.name))
     ax.grid(alpha=0.3)
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True))  # model years are whole numbers
+    ax.yaxis.set_major_formatter(ScalarFormatter(useOffset=False))
     if any(labels):
-        ax.legend()
+        ax.legend(fontsize=7, framealpha=0.6)
     return ax
 
 
@@ -49,7 +52,22 @@ def _levels(fixed, default):
     """Fixed contour levels as a sorted array, or the data-derived `default`."""
     import numpy as np
 
-    return default if fixed is None else np.sort(np.asarray(fixed, dtype=float))
+    if fixed is None:
+        return _round_levels(default)
+    return np.sort(np.asarray(fixed, dtype=float))
+
+
+def _round_levels(levels, digits=3):
+    """Levels rounded to `digits` significant figures (readable colorbar ticks), duplicates removed."""
+    import numpy as np
+
+    levels = np.asarray(levels, dtype=float)
+    scale = np.max(np.abs(levels)) if levels.size else 0.0
+    if not np.isfinite(scale) or scale == 0:
+        return levels
+    decimals = digits - 1 - int(np.floor(np.log10(scale)))
+    rounded = np.unique(np.round(levels, decimals))
+    return rounded if rounded.size > 1 else levels
 
 
 def _cmap(cmap, fallback):
@@ -61,6 +79,10 @@ def _cmap(cmap, fallback):
     if cmap is None:
         return mpl.colormaps[fallback]
     return get_cmap(cmap) if isinstance(cmap, str) else cmap
+
+
+# no right-hand latitude labels (they run into the neighbouring colorbar), smaller colorbar text
+_MAP_STYLE = dict(right_labels=False, cbar_labelsize=10, cbar_ticksize=9)
 
 
 def _with_units(data, units):
@@ -102,24 +124,24 @@ def map_panels(lon, lat, model, obs=None, proj="PlateCarree", title=None, area=N
     norm = mpl.colors.BoundaryNorm(levels, cmap.N, extend="both")
     n = len(panels) + (obs is not None)
     fig, axes = plt.subplots(1, n, figsize=(
-        6.5 * n, 4.2), subplot_kw={"projection": projection})
+        6.5 * n, 3.8), subplot_kw={"projection": projection})
     axes = np.atleast_1d(axes)
     units = model.attrs.get("units", "")  # plot_map2d labels the colorbar with `.units`
     for ax, (label, data) in zip(axes, panels):
-        plot_map2d(lon, lat, _with_units(data, units), norm=norm, cmap=cmap, ax=ax)
+        plot_map2d(lon, lat, _with_units(data, units), norm=norm, cmap=cmap, ax=ax, **_MAP_STYLE)
         ax.set_title(label)
     if obs is not None:
         diff = climatology.difference(model, obs, label=diff_label.lower())
         dlev = _levels(diff_levels, _diff_levels(diff))
         dnorm = mpl.colors.BoundaryNorm(dlev, diff_cmap.N, extend="both")
-        plot_map2d(lon, lat, _with_units(diff, units), norm=dnorm, cmap=diff_cmap, ax=axes[-1])
+        plot_map2d(lon, lat, _with_units(diff, units), norm=dnorm, cmap=diff_cmap, ax=axes[-1], **_MAP_STYLE)
         if area is None:
             axes[-1].set_title(diff_label)
         else:
             st = climatology.stats(model, obs, area)
             axes[-1].set_title(f"{diff_label}\n{climatology.stats_label(st,
                                ref_label.lower())}", fontsize=9)
-    fig.suptitle(title or model.attrs.get("long_name", model.name))
+    fig.suptitle(title or model.attrs.get("long_name", model.name), y=1.0, va="bottom")
     return fig
 
 
@@ -172,7 +194,7 @@ def zonal_panels(zm_model, zm_obs=None, title=None, max_depth=5500.0, area="cosl
         ax.set_ylim(max_depth, 0)
         ax.set_xlabel("Latitude")
     axes[0].set_ylabel("Depth [m]")
-    fig.suptitle(title or zm_model.attrs.get("long_name", zm_model.name))
+    fig.suptitle(title or zm_model.attrs.get("long_name", zm_model.name), y=1.0, va="bottom")
     return fig
 
 
