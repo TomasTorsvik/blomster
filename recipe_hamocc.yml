@@ -30,6 +30,15 @@ experiment:
 #   year_start  : 1
 #   year_end    : 50
 
+# Optional plot style for maps and zonal means (legacy colormap, cntrs_*/dcntrs_*). All keys optional.
+# plots:
+#   fixed_levels : true            # legacy fixed contour levels (hamocc/levels.py); default: quantile levels per field
+#   colormap     : blueyellowred   # default (legacy purple-brown) | blueyellowred | any matplotlib name; default viridis
+#   diff_colormap: RdBu_r          # for model - obs / test - control
+#   levels:                        # per-variable levels, win over fixed_levels
+#     map:   {pco2: {levels: [250, 300, 350, 400], diff_levels: [-40, -20, 20, 40]}}
+#     zonal: {po4lvl: {levels: [0.5, 1.0, 2.0, 3.0]}}
+
 # -----------------------------------------
 #   Required history variables (by file tag)
 # -----------------------------------------

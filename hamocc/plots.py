@@ -45,12 +45,33 @@ def _diff_levels(diff):
     return levels if levels[-1] > 0 else np.linspace(-1.0, 1.0, len(levels))
 
 
-def map_panels(lon, lat, model, obs=None, proj="PlateCarree", title=None, area=None, control=None):
+def _levels(fixed, default):
+    """Fixed contour levels as a sorted array, or the data-derived `default`."""
+    import numpy as np
+
+    return default if fixed is None else np.sort(np.asarray(fixed, dtype=float))
+
+
+def _cmap(cmap, fallback):
+    """A colormap object from None (use `fallback`), a name (legacy or matplotlib) or an object."""
+    import matplotlib as mpl
+
+    from .colormaps import get_cmap
+
+    if cmap is None:
+        return mpl.colormaps[fallback]
+    return get_cmap(cmap) if isinstance(cmap, str) else cmap
+
+
+def map_panels(lon, lat, model, obs=None, proj="PlateCarree", title=None, area=None, control=None,
+               levels=None, diff_levels=None, cmap=None, diff_cmap=None):
     """Model | obs | model - obs maps (model only when there is no reference). Returns the figure.
 
     `control` (a second case on the same grid) takes the place of `obs`: test | control | test - control.
     With a reference and `area` (cell area, e.g. `timeseries.load_parea`) the difference title shows
     the mean, bias and RMSE over common cells (`climatology.stats`).
+    `levels` / `diff_levels` fix the contour levels of the fields / the difference (default: quantile levels
+    of the data); `cmap` / `diff_cmap` are colormap names or objects (default viridis / RdBu_r).
     """
     import cartopy.crs as ccrs
     import matplotlib as mpl
@@ -67,24 +88,21 @@ def map_panels(lon, lat, model, obs=None, proj="PlateCarree", title=None, area=N
     obs = ref
     panels = [(test_label, model)] if obs is None else [
         (test_label, model), (ref_label, obs)]
-    levels = shared_quantile_levels([d for _, d in panels])
-    norm = mpl.colors.BoundaryNorm(
-        levels, mpl.colormaps["viridis"].N, extend="both")
+    cmap, diff_cmap = _cmap(cmap, "viridis"), _cmap(diff_cmap, "RdBu_r")
+    levels = _levels(levels, shared_quantile_levels([d for _, d in panels]))
+    norm = mpl.colors.BoundaryNorm(levels, cmap.N, extend="both")
     n = len(panels) + (obs is not None)
     fig, axes = plt.subplots(1, n, figsize=(
         6.5 * n, 4.2), subplot_kw={"projection": projection})
     axes = np.atleast_1d(axes)
     for ax, (label, data) in zip(axes, panels):
-        plot_map2d(lon, lat, data, norm=norm,
-                   cmap=mpl.colormaps["viridis"], ax=ax)
+        plot_map2d(lon, lat, data, norm=norm, cmap=cmap, ax=ax)
         ax.set_title(label)
     if obs is not None:
         diff = climatology.difference(model, obs, label=diff_label.lower())
-        dlev = _diff_levels(diff)
-        dnorm = mpl.colors.BoundaryNorm(
-            dlev, mpl.colormaps["RdBu_r"].N, extend="both")
-        plot_map2d(lon, lat, diff, norm=dnorm,
-                   cmap=mpl.colormaps["RdBu_r"], ax=axes[-1])
+        dlev = _levels(diff_levels, _diff_levels(diff))
+        dnorm = mpl.colors.BoundaryNorm(dlev, diff_cmap.N, extend="both")
+        plot_map2d(lon, lat, diff, norm=dnorm, cmap=diff_cmap, ax=axes[-1])
         if area is None:
             axes[-1].set_title(diff_label)
         else:
@@ -95,12 +113,14 @@ def map_panels(lon, lat, model, obs=None, proj="PlateCarree", title=None, area=N
     return fig
 
 
-def zonal_panels(zm_model, zm_obs=None, title=None, max_depth=5500.0, area="coslat", zm_control=None):
+def zonal_panels(zm_model, zm_obs=None, title=None, max_depth=5500.0, area="coslat", zm_control=None,
+                 levels=None, diff_levels=None, cmap=None, diff_cmap=None):
     """Latitude-depth sections: model | obs | model - obs (model only when there is no reference).
 
     `zm_control` takes the place of `zm_obs`: test | control | test - control.
     The difference title shows mean, bias and RMSE over common cells, weighted by `area`
     (default cos(latitude); a DataArray, or None for equal weights; `False` hides the numbers).
+    `levels`, `diff_levels`, `cmap` and `diff_cmap` as in `map_panels`.
     """
     import matplotlib as mpl
     import numpy as np
@@ -113,21 +133,22 @@ def zonal_panels(zm_model, zm_obs=None, title=None, max_depth=5500.0, area="cosl
         zm_obs, zm_control)
     panels = [(test_label, zm_model)] if zm_obs is None else [
         (test_label, zm_model), (ref_label, zm_obs)]
-    levels = shared_quantile_levels([d for _, d in panels])
+    cmap, diff_cmap = _cmap(cmap, "viridis"), _cmap(diff_cmap, "RdBu_r")
+    levels = _levels(levels, shared_quantile_levels([d for _, d in panels]))
     n = len(panels) + (zm_obs is not None)
     fig, axes = plt.subplots(1, n, figsize=(5.5 * n, 3.8), sharey=True)
     axes = np.atleast_1d(axes)
     units = zm_model.attrs.get("units", "")
     for ax, (label, data) in zip(axes, panels):
         cs = ax.contourf(data["lat"], data["depth"], data,
-                         levels=levels, cmap="viridis", extend="both")
+                         levels=levels, cmap=cmap, extend="both")
         fig.colorbar(cs, ax=ax, label=units)
         ax.set_title(label)
     if zm_obs is not None:
         diff = climatology.difference(
             zm_model, zm_obs, label=diff_label.lower())
-        cs = axes[-1].contourf(diff["lat"], diff["depth"], diff, levels=_diff_levels(diff),
-                               cmap="RdBu_r", extend="both")
+        cs = axes[-1].contourf(diff["lat"], diff["depth"], diff, levels=_levels(diff_levels, _diff_levels(diff)),
+                               cmap=diff_cmap, extend="both")
         fig.colorbar(cs, ax=axes[-1], label=units)
         if area is False:
             axes[-1].set_title(diff_label)

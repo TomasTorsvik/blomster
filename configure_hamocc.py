@@ -21,6 +21,9 @@ with open(book.joinpath('_toc.yml'), 'w') as f:
 
 # save settings read by the notebooks
 settings = {k: cfg[k] for k in ('hamocc', 'experiment', 'variables', 'grids', 'datasets')}
+# optional plot style (colormap, fixed contour levels)
+if cfg.get('plots'):
+    settings['plots'] = dict(cfg['plots'])
 # optional control case (model-model comparison); validated when present
 cntl = cfg.get('experiment_cntl')
 if cntl:

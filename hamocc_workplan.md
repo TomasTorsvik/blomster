@@ -181,6 +181,22 @@ plot functions as T2, so do T2 first). T4 builds on T3's plot code only for the 
   setting (legacy `colormap`: default or blueyellowred). `density` and `publish_html` have no counterpart and can
   stay out (Jupyter Book replaces them).
 
+### Status (T8)
+* Done 2026-11-08. `hamocc/levels.py`: the legacy contour tables (`cntrs_*`/`dcntrs_*`, extracted from the NCL by script) for
+  2-D maps, maps at depth and zonal sections (`SURFACE_LEVELS`, `DEPTH_MAP_LEVELS`, `ZONAL_LEVELS`) and
+  `fixed_levels(kind, name, plots_cfg)`. `hamocc/colormaps.py`: legacy `default` (rainbow_marco) and `blueyellowred`
+  palettes (embedded, 0-255 RGB) plus `get_cmap` (also any matplotlib name). `plots.map_panels` / `zonal_panels` take
+  `levels`, `diff_levels`, `cmap`, `diff_cmap` (defaults unchanged: quantile levels, viridis, RdBu_r). Recipe: optional
+  `plots:` section (`fixed_levels`, `colormap`, `diff_colormap`, per-variable `levels.map|zonal.<name>`), copied to
+  `settings.yml` by `configure_hamocc.py`; maps and zonal-mean notebooks apply it. `density` / `publish_html` left out.
+* Files: `hamocc/levels.py`, `hamocc/colormaps.py` (new), `hamocc/plots.py`, `recipe_hamocc.yml`,
+  `configure_hamocc.py`, maps and zonal-mean notebooks, `tests/test_hamocc_style.py` (new).
+* Tests: `blomster-env`, 104 passed (tables vs legacy spot values and coverage, defaults off, recipe override, colormaps,
+  fixed levels and colormaps reach the figures, default style unchanged).
+* Not verified: appearance by eye; the legacy levels assume the display units of `variables` match the legacy ones
+  (checked by name and unit text only, e.g. epc100 and ppint in mol C m-2 yr-1, dmsflux in pmol m-2 s-1; model units are
+  still unverified). Legacy used a separate palette for co2fxn (`rgb_file_co2fxn`); not ported. Notebooks not run.
+
 ## Cross-cutting
 * Keep `python -m pytest tests` fast and synthetic; add real-data checks as scripts outside the repo.
 * After each task: update `CLAUDE.md` (status and caveats) and the "not yet verified" notes in the notebooks.
