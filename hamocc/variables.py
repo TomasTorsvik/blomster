@@ -28,12 +28,16 @@ LEVEL_VARS = {
     "no3lvl": Var("no3lvl", "Nitrate", "mmol m-3", 1e3, "WOA13"),
     "dissiclvl": Var("dissiclvl", "Dissolved inorganic carbon", "mol m-3", 1.0, "GLODAPv2"),
     "talklvl": Var("talklvl", "Total alkalinity", "eq m-3", 1.0, "GLODAPv2"),
-    # delta13clvl is not written by this model configuration (absent from the history files)
+    # Optional: not written by every configuration (absent from the test case); skipped when missing.
+    # History units are permil (legacy get_delta13c), shown as is.
+    "delta13clvl": Var("delta13clvl", "Delta13C of DIC", "permil", 1.0, "EideM2017"),
 }
 
 # 2-D surface fields (annual climatology)
 SURFACE_VARS = {
     "ppint": Var("ppint", "Primary production (integrated)", "mol C m-2 yr-1", SEC_PER_YEAR, "MODIS"),
+    # Optional: offline total primary production, same units as ppint (legacy pp_tot); skipped when missing.
+    "pp_tot": Var("pp_tot", "Primary production (total)", "mol C m-2 yr-1", SEC_PER_YEAR, "MODIS"),
     "epc100": Var("epc100", "POC export at 100 m", "mol C m-2 yr-1", SEC_PER_YEAR),
     "pco2": Var("pco2", "Surface pCO2", "uatm", 1.0, "Landschuetzer2015"),
     "dmsflux": Var("dmsflux", "DMS flux", "pmol m-2 s-1", 1e12),
@@ -71,6 +75,7 @@ FLUX_TS_VARS = {
     # history unit is mol DMS m-2 s-1; one mol DMS carries 32.06 g S
     "dmsflux": Var("dmsflux", "DMS flux", "Tg S yr-1", 32.06 * SEC_PER_YEAR * 1e-12),
     "ppint": Var("ppint", "Integrated primary production", "Pg C yr-1", 12 * SEC_PER_YEAR * 1e-15),
+    "pp_tot": Var("pp_tot", "Total primary production", "Pg C yr-1", 12 * SEC_PER_YEAR * 1e-15),
 }
 
 # Physical surface fields for the regional cycles (from the BLOM `hm` history files)
@@ -81,7 +86,7 @@ PHYS_MONTHLY_VARS = {
 }
 
 # Variables shown in the regional monthly cycles, in display order
-REGIONAL_VARS = ("pco2", "co2fxn", "ppint", "srfo2", "srfsi", "srfpo4", "srfno3",
+REGIONAL_VARS = ("pco2", "co2fxn", "pp_tot", "ppint", "srfo2", "srfsi", "srfpo4", "srfno3",
                  "sst", "sss", "mld")
 
 DEPTH_LEVELS_M = (0, 100, 500, 1000, 2000, 3000, 4000)

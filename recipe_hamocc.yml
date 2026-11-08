@@ -43,6 +43,8 @@ variables:
     - no3lvl
     - dissiclvl
     - talklvl
+    - delta13clvl                   # optional: skipped when the run does not write it
+    - pp_tot                        # optional, like delta13clvl
     - ppint
     - epc100
     - epcalc100
@@ -51,6 +53,7 @@ variables:
     - co2fxu
     - dmsflux
   hbgcm:
+    - pp_tot                        # optional
     - ppint
     - pco2
     - co2fxd
@@ -107,6 +110,9 @@ datasets:
     pco2:        {file: Landschuetzer_2015/spco2_ETH_ANN_1982-2011.nc, var: spco2, scale: 1.0}
     co2fxn:      {file: Landschuetzer_2015/spco2_ETH_ANN_1982-2011.nc, var: fgco2, scale: -1.0}
     ppint:       {file: OcnProd_MODIS/ave.m.clim_annual_2003-2012.nc, var: pp, scale: 31536000}
+    pp_tot:      {file: OcnProd_MODIS/ave.m.clim_annual_2003-2012.nc, var: pp, scale: 31536000}
+    # Eide et al. (2017) preindustrial delta13C: permil, depths 0-5500 m but data only from 200 m down
+    delta13clvl: {file: EideM-etal_2017/C13_Climatology.nc, var: c13_pi, scale: 1.0}
   zonal:
     # Legacy basin masks on the 1x1 grid (grid_files/1x1d/generic/); variable `mask` verified.
     basin_mask_root: /nird/datalake/NS16000B/blomster/grids/1x1d/generic
@@ -126,6 +132,7 @@ datasets:
   regional:
     pco2:    {file: "Landschuetzer_2015/spco2_ETH_MON_1982-2011_{region}.nc", var: spco2, scale: 1.0}
     co2fxn:  {file: "Landschuetzer_2015/spco2_ETH_MON_1982-2011_{region}.nc", var: fgco2, scale: -1.0}
+    pp_tot:  {file: "OcnProd_MODIS/ave.m.clim_MON_2003-2012_{region}.nc", var: pp, scale: 31536000}
     ppint:   {file: "OcnProd_MODIS/ave.m.clim_MON_2003-2012_{region}.nc", var: pp, scale: 31536000}
     srfo2:   {file: "WOA13/woa13_all_oMON_01_{region}.nc", var: o_an, scale: 44.66}
     srfsi:   {file: "WOA13/woa13_all_iMON_01_{region}.nc", var: i_an, scale: 1.0}

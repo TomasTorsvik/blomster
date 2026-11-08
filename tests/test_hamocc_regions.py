@@ -220,7 +220,7 @@ def test_real_masks_cell_counts(region):
     gen = regions.region_mask(basins, region, g)
     spec = {"root": str(_LEGACY), "region_file": "{var}/region_mask_1x1_{region}.nc",
             "var_file": "{var}/{var}_mask_1x1.nc", "var": "mask", "alias": {"co2fxn": "co2fxd"}}
-    for name in ("pco2", "co2fxn", "ppint", "srfo2", "srfsi", "srfpo4", "srfno3", "sst", "sss", "mld"):
+    for name in ("pco2", "co2fxn", "pp_tot", "ppint", "srfo2", "srfsi", "srfpo4", "srfno3", "sst", "sss", "mld"):
         key = spec["alias"].get(name, name)
         with xr.open_dataset(_LEGACY / f"{key}/region_mask_1x1_{region}.nc", decode_times=False) as ds:
             ref = (ds["mask"].squeeze() > 0).sum(

@@ -138,6 +138,21 @@ plot functions as T2, so do T2 first). T4 builds on T3's plot code only for the 
 * Depends on T5 (skipped cleanly when absent). Neither exists in the test case, so only a synthetic test is possible
   until a run writes them.
 
+### Status (T6)
+* Done 2026-11-08. `delta13clvl` in `variables.LEVEL_VARS` (permil, scale 1, obs key `EideM2017`) so maps and zonal
+  means pick it up and skip it when absent (T5). `pp_tot` in `SURFACE_VARS` (maps, same scale/obs as `ppint`),
+  `FLUX_TS_VARS` and `REGIONAL_VARS` (before `ppint`, as legacy). The time-series notebook plots `pp_tot` only when
+  `ppint` is absent (legacy fallback). Recipe: `datasets.maps` entries `delta13clvl` (`EideM-etal_2017/C13_Climatology.nc`,
+  var `c13_pi`) and `pp_tot` (MODIS), `datasets.regional.pp_tot`, optional entries in the `hbgcy`/`hbgcm` variable lists.
+  The legacy per-variable masks already include a `pp_tot/` directory, so regional masking works unchanged.
+* Obs checked read-only: `c13_pi` is in per mil on 33 WOA depths (0-5500 m) but has data only from 200 m down, so the
+  0 m and 100 m obs panels are empty (plots still render, with numpy quantile warnings); MODIS `pp_tot` equals `ppint`.
+* Files: `hamocc/variables.py`, `recipe_hamocc.yml`, `notebooks_hamocc/timeseries/timeseries.ipynb`,
+  `tests/test_hamocc_variables.py`, `tests/test_hamocc_regions.py` (pp_tot mask counts vs legacy file).
+* Tests: `blomster-env`, 74 passed (synthetic: skipped when absent, plotted when present, units).
+* Not verified: model units of `delta13clvl` and `pp_tot` (neither is in the test case; assumed permil and ppint-like
+  mol C m-2 s-1 from the legacy code); the legacy `pp_tot` was an offline-computed field, so check on a run that writes it.
+
 ## T7. More grids
 * Legacy offers 16 predefined grids (`determine_grid_type.sh`; files in `$LEGACY_DATA/grid_files/<grid>/`).
 * Do: add the grids to the recipe `grids:` section (with `parea`, corners check as for `tnx1v4`) or a lookup by
