@@ -28,12 +28,11 @@ LEVEL_VARS = {
     "no3lvl": Var("no3lvl", "Nitrate", "mmol m-3", 1e3, "WOA13"),
     "dissiclvl": Var("dissiclvl", "Dissolved inorganic carbon", "mol m-3", 1.0, "GLODAPv2"),
     "talklvl": Var("talklvl", "Total alkalinity", "eq m-3", 1.0, "GLODAPv2"),
-    "delta13clvl": Var("delta13clvl", "delta13C of DIC", "permil", 1.0, "Eide2017"),
+    # delta13clvl is not written by this model configuration (absent from the history files)
 }
 
 # 2-D surface fields (annual climatology)
 SURFACE_VARS = {
-    "pp_tot": Var("pp_tot", "Primary production (vertically integrated)", "mol C m-2 yr-1", SEC_PER_YEAR, "MODIS"),
     "ppint": Var("ppint", "Primary production (integrated)", "mol C m-2 yr-1", SEC_PER_YEAR, "MODIS"),
     "epc100": Var("epc100", "POC export at 100 m", "mol C m-2 yr-1", SEC_PER_YEAR),
     "pco2": Var("pco2", "Surface pCO2", "uatm", 1.0, "Landschuetzer2015"),
@@ -69,8 +68,8 @@ FLUX_TS_VARS = {
     "co2fxu": Var("co2fxu", "CO2 flux out of ocean (upward)", "Pg C yr-1", SEC_PER_YEAR * 1e-12),
     "epc100": Var("epc100", "POC export at 100 m", "Pg C yr-1", 12.011 * SEC_PER_YEAR * 1e-15),
     "epcalc100": Var("epcalc100", "CaCO3 export at 100 m", "Pg C yr-1", 12 * SEC_PER_YEAR * 1e-15),
-    "dmsflux": Var("dmsflux", "DMS flux", "Tg S yr-1", 62.13 * SEC_PER_YEAR * 1e-12),
-    "pp_tot": Var("pp_tot", "Primary production", "Pg C yr-1", 12 * SEC_PER_YEAR * 1e-15),
+    # history unit is mol DMS m-2 s-1; one mol DMS carries 32.06 g S
+    "dmsflux": Var("dmsflux", "DMS flux", "Tg S yr-1", 32.06 * SEC_PER_YEAR * 1e-12),
     "ppint": Var("ppint", "Integrated primary production", "Pg C yr-1", 12 * SEC_PER_YEAR * 1e-15),
 }
 
@@ -82,7 +81,7 @@ PHYS_MONTHLY_VARS = {
 }
 
 # Variables shown in the regional monthly cycles, in display order
-REGIONAL_VARS = ("pco2", "co2fxn", "pp_tot", "ppint", "srfo2", "srfsi", "srfpo4", "srfno3",
+REGIONAL_VARS = ("pco2", "co2fxn", "ppint", "srfo2", "srfsi", "srfpo4", "srfno3",
                  "sst", "sss", "mld")
 
 DEPTH_LEVELS_M = (0, 100, 500, 1000, 2000, 3000, 4000)

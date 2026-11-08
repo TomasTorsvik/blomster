@@ -42,8 +42,9 @@ def volume_mean(da, thickness, parea, dims=None):
 
 def level_thickness(depth_bnds, zmin=0.0, zmax=None):
     """Thickness (m) of each z-level, optionally clipped to [zmin, zmax]."""
-    upper = depth_bnds.isel(bnds=0)
-    lower = depth_bnds.isel(bnds=1)
+    bounds_dim = depth_bnds.dims[-1]  # "bounds" in NorESM3 history files
+    upper = depth_bnds.isel({bounds_dim: 0})
+    lower = depth_bnds.isel({bounds_dim: 1})
     if zmax is not None:
         lower = lower.clip(max=zmax)
     upper = upper.clip(min=zmin)
@@ -59,14 +60,13 @@ def upper_ocean_mean(da, depth_bnds, parea, zmax=100.0):
 def global_mean_series(ds, name, parea, zmax=None, offset=0):
     """Annual global volume mean of `name` in display units.
 
-    With `zmax` the z-level variable `{name}lvl` is averaged over 0-zmax m;
-    otherwise the 3-D variable is weighted with `pddpo`.
+    Uses the z-level variable `{name}lvl` (the history files only carry the
+    isopycnic fields on z-levels), weighted by z-level thickness from
+    `depth_bnds`: over the full depth, or over 0-`zmax` m when given.
     """
     var = v.CONC_TS_VARS[name]
-    if zmax is None:
-        series = volume_mean(ds[name], ds["pddpo"], parea)
-    else:
-        series = upper_ocean_mean(ds[f"{name}lvl"], ds["depth_bnds"], parea, zmax)
+    series = upper_ocean_mean(ds[f"{name}lvl"], ds["depth_bnds"], parea,
+                              zmax=float("inf") if zmax is None else zmax)
     series = (series * var.scale).rename(name)
     series.attrs.update(long_name=var.long_name, units=var.units)
     return annual_index(series, offset)

@@ -18,8 +18,6 @@ def _spec(name):
 
 def history_names(name, monthly=False):
     """History variables needed to build `name` (`monthly`: from the hbgcm files)."""
-    if monthly and name == "pp_tot":
-        return ["pp", "pddpo"]
     if name == "aoulvl":
         return ["p_o2lvl", "o2lvl"]
     if name == "co2fxn":
@@ -70,9 +68,7 @@ def layer_sum(da, exclude=("time", "y", "x")):
 
 
 def monthly_raw(ds, name):
-    """Monthly field in model units; `pp_tot` is the layer sum of `pp * pddpo`."""
-    if name == "pp_tot":
-        return layer_sum(ds["pp"] * ds["pddpo"])
+    """Monthly field in model units."""
     return raw_field(ds, name)
 
 

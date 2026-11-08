@@ -60,12 +60,11 @@ def test_obs_cycle_needs_twelve_steps():
         regions.obs_cycle(xr.DataArray(np.zeros(5), dims="time"))
 
 
-def test_monthly_cycle_pp_tot_and_months():
+def test_monthly_cycle_ppint_and_months():
     import cftime
     times = [cftime.DatetimeNoLeap(y, m, 15) for y in (1, 2) for m in range(1, 13)]
-    pp = xr.DataArray(np.ones((24, 2, 2, 2)), dims=("time", "sigma", "y", "x"), coords={"time": times})
-    pddpo = xr.DataArray(np.full((24, 2, 2, 2), 10.0), dims=("time", "sigma", "y", "x"), coords={"time": times})
-    out = clim.monthly_cycle(xr.Dataset({"pp": pp, "pddpo": pddpo}), "pp_tot")
+    ppint = xr.DataArray(np.full((24, 2, 2), 2.0), dims=("time", "y", "x"), coords={"time": times})
+    out = clim.monthly_cycle(xr.Dataset({"ppint": ppint}), "ppint")
     assert out.sizes["month"] == 12
-    assert float(out[0, 0, 0]) == pytest.approx(20.0 * 86400 * 365)
-    assert clim.history_names("pp_tot", monthly=True) == ["pp", "pddpo"]
+    assert float(out[0, 0, 0]) == pytest.approx(2.0 * 86400 * 365)
+    assert clim.history_names("ppint", monthly=True) == ["ppint"]

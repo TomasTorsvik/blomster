@@ -39,6 +39,12 @@ def test_level_thickness_clips_to_zmax():
     assert dz.values.tolist() == [50.0, 50.0, 0.0]
 
 
+def test_level_thickness_uses_last_dim_as_bounds():
+    """NorESM3 history files name the bounds dimension `bounds`, not `bnds`."""
+    bnds = xr.DataArray([[0.0, 50.0], [50.0, 150.0]], dims=("depth", "bounds"))
+    assert ts.level_thickness(bnds).values.tolist() == [50.0, 100.0]
+
+
 def test_upper_ocean_mean_uses_only_top_100m():
     parea = _grid()
     bnds = xr.DataArray([[0.0, 50.0], [50.0, 150.0], [150.0, 400.0]], dims=("depth", "bnds"))
@@ -66,11 +72,24 @@ def test_global_mean_series_scales_to_mmol():
     parea = _grid()
     o2 = xr.DataArray(np.full((2, 1, 2, 3), 0.25), dims=("time", "depth", "y", "x"),
                       coords={"time": _time(2)})
-    pddpo = xr.DataArray(np.full((2, 1, 2, 3), 10.0), dims=("time", "depth", "y", "x"),
-                         coords={"time": _time(2)})
-    out = ts.global_mean_series(xr.Dataset({"o2": o2, "pddpo": pddpo}), "o2", parea, offset=100)
+    bnds = xr.DataArray([[0.0, 10.0]], dims=("depth", "bounds"))
+    ds = xr.Dataset({"o2lvl": o2, "depth_bnds": bnds})
+    out = ts.global_mean_series(ds, "o2", parea, offset=100)
     assert out.values == pytest.approx([250.0, 250.0])
     assert out["year"].values.tolist() == [101, 102]
+
+
+def test_global_mean_series_weights_levels_by_thickness_and_zmax():
+    parea = _grid()
+    o2 = xr.DataArray(np.zeros((1, 2, 2, 3)), dims=("time", "depth", "y", "x"), coords={"time": _time(1)})
+    o2[:, 0] = 1.0
+    o2[:, 1] = 3.0
+    bnds = xr.DataArray([[0.0, 50.0], [50.0, 150.0]], dims=("depth", "bounds"))
+    ds = xr.Dataset({"o2lvl": o2, "depth_bnds": bnds})
+    full = ts.global_mean_series(ds, "o2", parea)
+    top = ts.global_mean_series(ds, "o2", parea, zmax=100.0)
+    assert full.item() == pytest.approx((1 * 50 + 3 * 100) / 150 * 1e3)
+    assert top.item() == pytest.approx((1 * 50 + 3 * 50) / 100 * 1e3)
 
 
 def test_drift():
