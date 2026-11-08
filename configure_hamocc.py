@@ -21,5 +21,14 @@ with open(book.joinpath('_toc.yml'), 'w') as f:
 
 # save settings read by the notebooks
 settings = {k: cfg[k] for k in ('hamocc', 'experiment', 'variables', 'grids', 'datasets')}
+# optional control case (model-model comparison); validated when present
+cntl = cfg.get('experiment_cntl')
+if cntl:
+    missing = [k for k in ('caseid', 'year_start', 'year_end') if k not in cntl]
+    if missing:
+        raise KeyError(f'experiment_cntl is missing {missing}')
+    settings['experiment_cntl'] = dict(cntl)
+    settings['experiment_cntl'].setdefault('input_root', cfg['experiment']['input_root'])
+
 with open(book.joinpath('settings.yml'), 'w') as f:
     yaml.dump(settings, f, default_flow_style=False, sort_keys=False)

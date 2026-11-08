@@ -70,6 +70,30 @@ plot functions as T2, so do T2 first). T4 builds on T3's plot code only for the 
   share code.
 * Done when: synthetic two-case test; each notebook runs with `compare_obs=False` and a control case.
 
+### Status (2026-11-08)
+* Done: optional `experiment_cntl` (`caseid`, `year_start`, `year_end`, optional `input_root`) in the recipe (commented
+  out by default) and `configure_hamocc.py` (validated, copied to `settings.yml` only when present). New
+  `hamocc/compare.py` (`control_case`, `reference_kind`). `plots.map_panels(control=)`, `zonal_panels(zm_control=)`,
+  `cycle_panels(control=)` replace obs (Test | Control | Test - control; dashed control line in cycles); existing calls
+  unchanged. `climatology.difference(label=)`. Zero difference panels (case vs itself) get +-1 levels instead of failing.
+  Maps, zonal-mean and regional notebooks share one reference path (`kind` = control | obs | None) with new parameter
+  `compare_cntl=True`; `compare_obs=False` + control works. Time-series notebook defaults its second case to the control.
+  A control case wins over obs when both are enabled.
+* Files: `hamocc/compare.py` (new), `hamocc/plots.py`, `hamocc/climatology.py`, `recipe_hamocc.yml`, `configure_hamocc.py`,
+  the four notebooks in `notebooks_hamocc/`, `tests/test_hamocc_compare.py` (new). `CLAUDE.md` (gitignored, main checkout) has a
+  "Control case" section.
+* Tests: `python -m pytest tests` 49 passed. The code cells of all four notebooks were also run on synthetic two-case
+  files (grid, masks, hbgcy/hbgcm/hm; xesmf regridding) with `compare_obs=False`, with and without a control: all panels
+  produced with the right titles/labels (script kept outside the repo).
+* Not verified: real model output, full `jupyter-book` build, difference panels against real obs (the obs diff
+  path ran only through unit tests), same-grid assumption for control (uses the recipe grid), no stats in titles (T2).
+* Merge notes: `hamocc/plots.py` is the hot spot: `map_panels`/`zonal_panels` signatures, panel-label lines and the new
+  `reference_labels`/`_diff_levels` helpers overlap T2's title stats (T2 should put stats on the `diff_label`/`ref_label`
+  panels and use the `ref`/`test` names; the controlled case needs the same stats). `cycle_panels` gets `control=`. Notebook
+  cells `maps` [3], `zonal_mean` [3], `regional` [3] were restructured (case opening, reference); T1 edits the regional
+  mask code in the same cell: keep T1's mask logic, apply it to both cases (`model_cycles(name, case)`). Recipe: only a
+  commented block after `experiment:`. `climatology.py`: `difference` signature (T2 adds `stats`, no conflict expected).
+
 ## T4. Separate averaging periods
 * Legacy: climatology period (first year + number of years) differs from the time-series period;
   `code/determine_ts_yrs.sh` detects time-series years.

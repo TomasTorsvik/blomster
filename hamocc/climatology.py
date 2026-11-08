@@ -54,10 +54,10 @@ def annual_mean_map(ds, name, depth=None):
     return out
 
 
-def difference(model, obs):
-    """Model minus obs on the same grid, keeping the units."""
+def difference(model, obs, label="model - obs"):
+    """Model minus obs (or test minus control) on the same grid, keeping the units."""
     diff = (model - obs).rename(model.name)
-    diff.attrs.update(long_name=f"{model.attrs.get('long_name', model.name)}, model - obs",
+    diff.attrs.update(long_name=f"{model.attrs.get('long_name', model.name)}, {label}",
                       units=model.attrs.get("units", ""))
     return diff
 
@@ -91,9 +91,9 @@ def stats(model, obs, area=None):
     return {"model_mean": m, "obs_mean": o, "bias": m - o, "rmse": sq ** 0.5, "n": n}
 
 
-def stats_label(s):
-    """Short text with the numbers of `stats`, for panel titles."""
-    return f"mean {s['model_mean']:.3g}, obs {s['obs_mean']:.3g}, bias {s['bias']:.3g}, RMSE {s['rmse']:.3g}"
+def stats_label(s, ref="obs"):
+    """Short text with the numbers of `stats`, for panel titles (`ref` names the reference field)."""
+    return f"mean {s['model_mean']:.3g}, {ref} {s['obs_mean']:.3g}, bias {s['bias']:.3g}, RMSE {s['rmse']:.3g}"
 
 
 def layer_sum(da, exclude=("time", "y", "x")):
