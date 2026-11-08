@@ -16,6 +16,11 @@ experiment:
   year_start  : 1
   year_end    : 50
   grid        : tnx1v4
+  # Optional averaging periods; each defaults to year_start / year_end above.
+  # climo_year_start / climo_year_end: maps, zonal means, regional cycles
+  # ts_year_start / ts_year_end: time series
+  # climo_year_start : 41
+  # climo_year_end   : 50
 
 # Optional control case (legacy CNTL=USER). When present, maps, zonal means and regional cycles show
 # test | control | test - control in place of the observations. Absent by default.

@@ -5,12 +5,41 @@ NorESM3 output):
     {caseid}.blom.hbgcy.{YYYY}.nc       annual
     {caseid}.blom.hbgcm.{YYYY}-{MM}.nc  monthly
 """
+import re
 from pathlib import Path
 
 import xarray as xr
 from xarray.coding.times import CFDatetimeCoder
 
 FILE_TAGS = {"ann": "hbgcy", "mon": "hbgcm"}
+
+_YEAR_RE = re.compile(r"\.(\d{4})(?:-\d{2})?\.nc$")
+
+
+def available_years(input_root, caseid, tag="hbgcy", component="blom"):
+    """Sorted years for which `tag` history files exist (detected from the file names)."""
+    hist = Path(input_root) / caseid / "ocn" / "hist"
+    years = set()
+    for f in hist.glob(f"{caseid}.{component}.{tag}.[0-9][0-9][0-9][0-9]*.nc"):
+        m = _YEAR_RE.search(f.name)
+        if m:
+            years.add(int(m.group(1)))
+    return sorted(years)
+
+
+def period(case, kind="climo"):
+    """(first, last) year to average over for `kind` = 'climo' (maps, sections, cycles) or 'ts' (time series).
+
+    Reads `<kind>_year_start` / `<kind>_year_end` from the case settings; each defaults to the case's
+    `year_start` / `year_end`, so a recipe without them behaves as before.
+    """
+    if kind not in ("climo", "ts"):
+        raise ValueError(f"kind must be 'climo' or 'ts', not {kind!r}")
+    ys = case.get(f"{kind}_year_start", case["year_start"])
+    ye = case.get(f"{kind}_year_end", case["year_end"])
+    if ye < ys:
+        raise ValueError(f"{kind}: year_end {ye} is before year_start {ys}")
+    return ys, ye
 
 
 def history_files(input_root, caseid, tag, year_start, year_end, component="blom"):

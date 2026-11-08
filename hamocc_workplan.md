@@ -102,6 +102,15 @@ plot functions as T2, so do T2 first). T4 builds on T3's plot code only for the 
   available years from file names.
 * Done when: defaults reproduce the current behaviour; test for year detection and the defaults.
 
+### Status (T4)
+* Done 2026-11-08. `io.period(case, kind)` (`kind` = `climo` | `ts`) reads `<kind>_year_start/_end` from the case settings,
+  defaulting to `year_start/year_end`; works for `experiment` and `experiment_cntl`. `io.available_years(input_root, caseid, tag)`
+  detects years from file names (ignores `hbgcy.i.*`). Maps, zonal-mean and regional notebooks use `climo`, the time series
+  notebook `ts`; `index.ipynb` prints both. Recipe has the options commented out; `configure_hamocc.py` already copies `experiment`.
+* Files: `hamocc/io.py`, `recipe_hamocc.yml`, the four notebooks + `index.ipynb`, `tests/test_hamocc_io.py`.
+* Tests: 63 passed; 3 `test_hamocc_compare` tests fail here only because `cartopy` is missing in the interpreter used
+  (same without these changes); run in `blomster-env`. Notebooks not executed; `available_years` is not yet used by the notebooks.
+
 ## T5. Missing-variable handling
 * Legacy: `code/check_history_vars.sh` found the variables present and skipped the plots that need others.
 * Do: make `io.open_history` return the present variables plus a list of missing ones (keep a strict mode);
