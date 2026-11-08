@@ -1,4 +1,5 @@
 """Annual-mean model fields for the HAMOCC maps, in display units."""
+import numpy as np
 import xarray as xr
 
 from . import variables as v
@@ -59,6 +60,40 @@ def difference(model, obs):
     diff.attrs.update(long_name=f"{model.attrs.get('long_name', model.name)}, model - obs",
                       units=model.attrs.get("units", ""))
     return diff
+
+
+def section_area(da, lat_name="lat"):
+    """cos(latitude) weights on the latitude axis of `da`, for latitude-depth sections."""
+    return np.cos(np.deg2rad(da[lat_name])).clip(min=0.0)
+
+
+def stats(model, obs, area=None):
+    """Area-weighted mean, bias and RMSE of `model` against `obs` over the cells valid in both.
+
+    `area` is a weight on (a subset of) the dims of `model`, e.g. `parea` for maps or
+    `section_area(model)` for sections; None means equal weights. The means of model and obs
+    are over the common cells too, so `bias == model_mean - obs_mean`.
+    Returns a dict with `model_mean`, `obs_mean`, `bias`, `rmse` (floats, display units)
+    and `n` (number of common cells); the values are NaN if there is no common cell.
+    """
+    model, obs = xr.align(model, obs, join="exact")
+    weight = xr.ones_like(model, dtype=float) if area is None else xr.broadcast(area, model)[0]
+    valid = model.notnull() & obs.notnull() & weight.notnull()
+    w = weight.where(valid, 0.0)
+    wsum = float(w.sum())
+    n = int(valid.sum())
+    if n == 0 or wsum == 0.0:
+        nan = float("nan")
+        return {"model_mean": nan, "obs_mean": nan, "bias": nan, "rmse": nan, "n": n}
+    m = float((model.where(valid, 0.0) * w).sum()) / wsum
+    o = float((obs.where(valid, 0.0) * w).sum()) / wsum
+    sq = float((((model - obs) ** 2).where(valid, 0.0) * w).sum()) / wsum
+    return {"model_mean": m, "obs_mean": o, "bias": m - o, "rmse": sq ** 0.5, "n": n}
+
+
+def stats_label(s):
+    """Short text with the numbers of `stats`, for panel titles."""
+    return f"mean {s['model_mean']:.3g}, obs {s['obs_mean']:.3g}, bias {s['bias']:.3g}, RMSE {s['rmse']:.3g}"
 
 
 def layer_sum(da, exclude=("time", "y", "x")):

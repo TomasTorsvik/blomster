@@ -45,6 +45,22 @@ plot functions as T2, so do T2 first). T4 builds on T3's plot code only for the 
 * Done when: tests for stats on synthetic fields (known bias and RMSE); titles show the numbers.
 * Why early: a quick check on the obs scale factors (units_verified) once real model output is available.
 
+### Status (2026-11-08, branch `claude/hamocc-t2-stats-019e1c`)
+* Done: `climatology.stats(model, obs, area=None)` returns model/obs mean (over common cells), bias, RMSE and
+  cell count (NaN if no common cell); `climatology.section_area` (cos-lat weights) and `stats_label` (title text).
+  `plots.map_panels(..., area=None)` shows the numbers in the "Model - obs" panel title when `area` is given;
+  `plots.zonal_panels(..., area="coslat")` always shows them (cos-lat default; a DataArray or None for other
+  weights, `False` to hide). Both new arguments are optional. `maps.ipynb` passes `timeseries.load_parea(grid_file)`.
+  `zonal_mean.ipynb` needed no change (cos-lat default).
+* Files: `hamocc/climatology.py`, `hamocc/plots.py`, `notebooks_hamocc/maps/maps.ipynb`,
+  `tests/test_hamocc_stats.py` (synthetic known bias/RMSE, area and cos-lat weighting, common cells, titles).
+  `python -m pytest tests`: 45 passed.
+* Not verified: real data (`load_parea` on `tnx1v4/grid.nc`, the maps notebook was not executed); title
+  rendering only checked through the figure title text in tests, not by eye.
+* For T3: stats go in the third panel's title only; when control replaces obs, call `climatology.stats(test,
+  control, area)` the same way (`stats_label` uses the word "obs" - make it a parameter if the label should say "control").
+  Both plot functions add `area` after the existing arguments; keep it when merging signatures.
+
 ## T3. Model-model comparison (legacy CNTL=USER)
 * Legacy: all four sets accept a control case and plot test, control and difference. blomster supports a second
   case only in the time-series notebook.

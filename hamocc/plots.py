@@ -20,8 +20,11 @@ def plot_series(series, labels=None, ax=None, title=None):
     return ax
 
 
-def map_panels(lon, lat, model, obs=None, proj="PlateCarree", title=None):
-    """Model | obs | model - obs maps (model only when `obs` is None). Returns the figure."""
+def map_panels(lon, lat, model, obs=None, proj="PlateCarree", title=None, area=None):
+    """Model | obs | model - obs maps (model only when `obs` is None). Returns the figure.
+
+    With `obs` and `area` (cell area, e.g. `timeseries.load_parea`) the model - obs title shows
+    the mean, bias and RMSE over common cells (`climatology.stats`)."""
     import cartopy.crs as ccrs
     import matplotlib as mpl
     import numpy as np
@@ -46,13 +49,20 @@ def map_panels(lon, lat, model, obs=None, proj="PlateCarree", title=None):
         dlev = symmetric_quantile_levels(diff)
         dnorm = mpl.colors.BoundaryNorm(dlev, mpl.colormaps["RdBu_r"].N, extend="both")
         plot_map2d(lon, lat, diff, norm=dnorm, cmap=mpl.colormaps["RdBu_r"], ax=axes[-1])
-        axes[-1].set_title("Model - obs")
+        if area is None:
+            axes[-1].set_title("Model - obs")
+        else:
+            st = climatology.stats(model, obs, area)
+            axes[-1].set_title(f"Model - obs\n{climatology.stats_label(st)}", fontsize=9)
     fig.suptitle(title or model.attrs.get("long_name", model.name))
     return fig
 
 
-def zonal_panels(zm_model, zm_obs=None, title=None, max_depth=5500.0):
-    """Latitude-depth sections: model | obs | model - obs (model only when `zm_obs` is None)."""
+def zonal_panels(zm_model, zm_obs=None, title=None, max_depth=5500.0, area="coslat"):
+    """Latitude-depth sections: model | obs | model - obs (model only when `zm_obs` is None).
+
+    The model - obs title shows mean, bias and RMSE over common cells, weighted by `area`
+    (default cos(latitude); a DataArray, or None for equal weights; `False` hides the numbers)."""
     import matplotlib as mpl
     import numpy as np
 
@@ -75,7 +85,12 @@ def zonal_panels(zm_model, zm_obs=None, title=None, max_depth=5500.0):
         cs = axes[-1].contourf(diff["lat"], diff["depth"], diff, levels=symmetric_quantile_levels(diff),
                                cmap="RdBu_r", extend="both")
         fig.colorbar(cs, ax=axes[-1], label=units)
-        axes[-1].set_title("Model - obs")
+        if area is False:
+            axes[-1].set_title("Model - obs")
+        else:
+            weight = climatology.section_area(zm_model) if isinstance(area, str) else area
+            st = climatology.stats(zm_model, zm_obs, weight)
+            axes[-1].set_title(f"Model - obs\n{climatology.stats_label(st)}", fontsize=9)
     for ax in axes:
         ax.set_ylim(max_depth, 0)
         ax.set_xlabel("Latitude")
